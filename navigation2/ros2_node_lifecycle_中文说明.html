@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ROS 2 Managed Node 生命周期设计说明</title>
+  <style>
+    :root { --blue:#2563eb; --ink:#172033; --muted:#5b6475; --bg:#f5f7fb; --card:#fff; --line:#dbe2ee; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:var(--bg); font:16px/1.75 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; }
+    main { max-width:1100px; margin:auto; padding:40px 22px 70px; } h1,h2,h3 { line-height:1.3; } h1 { font-size:2.2rem; } h2 { margin-top:2.2em; border-bottom:2px solid var(--line); padding-bottom:.35em; } h3 { margin-bottom:.25em; }
+    .lead,.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:22px 26px; box-shadow:0 4px 18px #1d355705; }
+    .lead { border-left:5px solid var(--blue); } .muted { color:var(--muted); } code { background:#eef2ff; color:#263b80; padding:2px 5px; border-radius:4px; }
+    figure { margin:24px 0; text-align:center; } figure img { max-width:100%; border:1px solid var(--line); border-radius:10px; background:#fff; } figcaption { color:var(--muted); font-size:.92rem; margin-top:8px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; } .state { border-top:4px solid var(--blue); } .transition { border-top:4px solid #d97706; } .state h3,.transition h3 { margin-top:0; }
+    .legend-item { display:flex; gap:12px; align-items:flex-start; } .legend-mark { flex:0 0 42px; height:30px; margin-top:4px; border:2px solid var(--blue); border-radius:9px; background:#dbeafe; } .legend-mark.transition-mark { border-color:#d97706; background:#fef3c7; border-radius:4px; } .legend-mark.start-mark,.legend-mark.end-mark { flex-basis:30px; width:30px; border-radius:50%; background:#fee2e2; border-color:#dc2626; position:relative; } .legend-mark.end-mark::after { content:'×'; color:#dc2626; font-size:25px; line-height:25px; position:absolute; left:5px; top:0; } .legend-mark.arrow-blue,.legend-mark.arrow-black { height:0; margin-top:18px; border:0; border-top:3px solid var(--blue); border-radius:0; background:none; position:relative; } .legend-mark.arrow-blue::after,.legend-mark.arrow-black::after { content:'➜'; position:absolute; right:-3px; top:-14px; color:var(--blue); font-size:20px; } .legend-mark.arrow-black { border-top-color:#111827; } .legend-mark.arrow-black::after { color:#111827; }
+    .legend-table td:first-child { width:190px; white-space:nowrap; font-weight:600; } .legend-table td:first-child code { font-weight:400; } .legend-symbol { display:inline-block; width:42px; height:34px; margin-right:10px; vertical-align:middle; border:2px solid #111827; border-radius:9px; background:linear-gradient(to bottom, #93c5fd 0 49%, #111827 49% 53%, #93c5fd 53% 100%); } .legend-symbol.transition-symbol { border-color:#111827; background:linear-gradient(to bottom, #fffcc7 0 49%, #111827 49% 53%, #fffcc7 53% 100%); } .legend-symbol.blue-line,.legend-symbol.black-line { width:42px; height:0; border:0; border-top:2px solid var(--blue); border-radius:0; background:none; position:relative; } .legend-symbol.blue-line::after,.legend-symbol.black-line::after { content:''; width:8px; height:8px; position:absolute; right:-2px; top:-6px; border-right:2px solid var(--blue); border-bottom:2px solid var(--blue); transform:rotate(-45deg); } .legend-symbol.black-line { border-top-color:#111827; } .legend-symbol.black-line::after { border-color:#111827; } .legend-symbol.start-symbol,.legend-symbol.final-symbol,.legend-symbol.error-symbol,.legend-symbol.error-entry-symbol { width:28px; height:28px; border-radius:50%; } .legend-symbol.start-symbol { border:0; background:#111827; } .legend-symbol.final-symbol { border:0; background:radial-gradient(circle, #111827 0 5px, #fff 5px 9px, #111827 9px 12px, transparent 12px); } .legend-symbol.error-symbol,.legend-symbol.error-entry-symbol { border:2px solid #111827; background:#ef4444; position:relative; } .legend-symbol.error-symbol::after { content:'×'; color:#111827; font-size:23px; font-weight:600; line-height:23px; position:absolute; left:3px; top:0; }
+    table { width:100%; border-collapse:collapse; background:#fff; } th,td { border:1px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top; } th { background:#eef3ff; }
+    .flow { font-size:1.05rem; background:#111827; color:#e5e7eb; border-radius:10px; padding:18px; overflow:auto; white-space:pre-wrap; }
+    footer { margin-top:42px; color:var(--muted); font-size:.9rem; }
+    [hidden] { display:none !important; }
+    button,input,select { font:inherit; } button { cursor:pointer; border:1px solid var(--line); border-radius:7px; background:white; padding:7px 14px; color:var(--ink); } button:disabled { opacity:.4; cursor:not-allowed; } button[aria-pressed="true"] { background:var(--blue); color:white; border-color:var(--blue); } button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
+    .global-nav { position:sticky; top:0; z-index:10; display:flex; gap:12px; padding:14px max(22px,calc((100% - 1056px)/2)); background:#ffffffed; border-bottom:1px solid var(--line); }
+    .sim-controls,.code-tabs { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:16px 0; } .sim-controls label { display:flex; flex-wrap:wrap; gap:8px; align-items:center; } input,select { padding:6px; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+    .state-strip { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0; } .state-chip { padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:#fff; } .state-chip.current { background:#dbeafe; border:2px solid var(--blue); font-weight:700; } .state-chip.transient.current { background:#fffcc7; border-color:#b77900; }
+    .sim-log,.example-pre { background:#111827; color:#e5e7eb; border-radius:9px; padding:18px; overflow:auto; font:14px/1.65 ui-monospace,monospace; } .sim-log { max-height:260px; white-space:pre-wrap; } .example-pre code { background:none; color:inherit; padding:0; } details { margin:20px 0; } summary { cursor:pointer; font-weight:600; } #sim-status { font-size:1.2rem; font-weight:600; } #complete-callback { background:#eef3ff; } @media(max-width:600px) { main { padding:22px 14px; } .global-nav { padding:10px 14px; } .sim-controls label { width:100%; } }
+  </style>
+<style>
+  .machine-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
+  #machine { display:block; width:100%; min-width:850px; }
+  .machine-node rect { fill:#93c5fd; stroke:#172033; stroke-width:1.5; }
+  .machine-node.transient rect { fill:#fffcc7; }
+  .machine-node text { font:14px system-ui,sans-serif; fill:#172033; text-anchor:middle; }
+  .machine-node .node-detail { font-size:12px; }
+  .machine-node.current rect,.machine-node.current circle { stroke:#c2410c; stroke-width:4; filter:drop-shadow(0 0 5px #fb923c88); }
+  .machine-node.current text:first-of-type { font-weight:750; }
+  .machine-edge path { fill:none; stroke:#334155; stroke-width:1.4; marker-end:url(#arrow-result); }
+  .machine-edge.external path { stroke:#2563eb; marker-end:url(#arrow-blue); }
+  .machine-edge.error path { stroke-dasharray:4 5; opacity:.25; }
+  .machine-edge text { fill:#475569; font:12px system-ui,sans-serif; text-anchor:middle; paint-order:stroke; stroke:#fff; stroke-width:5px; stroke-linejoin:round; }
+  .machine-edge.visited path { stroke:#15803d; stroke-width:2.5; opacity:1; }
+  .machine-edge.latest path { stroke:#c2410c; stroke-width:3; stroke-dasharray:9 5; opacity:1; marker-end:url(#arrow-live); animation:path-flow 1s linear infinite; }
+  .machine-edge.latest text { fill:#9a3412; font-weight:750; }
+  #machine-event { padding:12px 16px; background:#fff7ed; border-left:4px solid #ea580c; }
+  .machine-trace { overflow-wrap:anywhere; font-size:14px; color:#475569; }
+  @keyframes path-flow { to { stroke-dashoffset:-28; } }
+  @media(prefers-reduced-motion:reduce) { .machine-edge.latest path { animation:none; } }
+  .global-nav { flex-wrap:wrap; }
+  .diagram-open { display:block; width:100%; padding:0; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#f8fafc; cursor:zoom-in; }
+  .nav2-inline-diagram { display:block; width:100%; height:auto; }
+  #diagram-dialog { width:min(1500px,96vw); max-height:94vh; padding:20px; border:1px solid var(--line); border-radius:14px; background:#f8fafc; }
+  #diagram-dialog::backdrop { background:#0f172ab3; }
+  #diagram-display { overflow:auto; max-height:78vh; margin-top:16px; }
+  #diagram-display svg { min-width:1000px; }
+  .source-link { display:inline; padding:0; border:0; border-radius:0; background:none; color:#1d4ed8; text-decoration:underline; text-underline-offset:3px; }
+  #source-dialog { width:min(1200px,95vw); max-height:90vh; padding:24px; border:1px solid var(--line); border-radius:14px; color:var(--ink); background:var(--bg); }
+  #source-dialog::backdrop { background:#0f172ab3; }
+  .source-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .source-dialog-header h2 { margin:0; padding:0; border:0; font-size:1.3rem; overflow-wrap:anywhere; }
+  #source-dialog .source-code-pre { max-height:58vh; margin-bottom:0; tab-size:2; }
+  #source-copy-status { font-size:14px; }
+  @media(max-width:600px) { #source-dialog { padding:14px; } }
+  .example-pre[data-language]::before { content:attr(data-language); display:block; color:#94a3b8; font:12px/1.5 system-ui,sans-serif; letter-spacing:.08em; border-bottom:1px solid #334155; padding-bottom:8px; margin-bottom:12px; }
+  .example-pre .tok-comment { color:#94a3b8; font-style:italic; }
+  .example-pre .tok-string { color:#a5d6a7; }
+  .example-pre .tok-keyword { color:#c4b5fd; }
+  .example-pre .tok-type { color:#67e8f9; }
+  .example-pre .tok-function { color:#93c5fd; }
+  .example-pre .tok-number,.example-pre .tok-constant { color:#fdba74; }
+  .example-pre .tok-directive { color:#f9a8d4; }
+  main:has(#simulation:not([hidden])) { max-width:1600px; }
+  .simulation-layout { display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:24px; align-items:start; }
+  .simulation-visual,.simulation-console { min-width:0; }
+  .simulation-visual #machine { min-width:680px; }
+  .simulation-console { padding:20px; background:white; border:1px solid var(--line); border-radius:12px; }
+  .simulation-console h3:first-child { margin-top:0; }
+  .simulation-console .sim-controls label { display:flex; width:100%; justify-content:space-between; }
+  .simulation-console input { width:190px; min-width:0; }
+  .simulation-console #sim-status { margin:12px 0; }
+  .simulation-console #complete-callback { width:100%; }
+  .simulation-console .muted { font-size:14px; }
+  .simulation-console .sim-log { max-height:240px; font-size:13px; }
+  @media(max-width:1050px) { .simulation-layout { grid-template-columns:minmax(0,1fr); } }
+</style>
+</head>
+<body>
+<nav class="global-nav" aria-label="全局导航"><button type="button" data-page="design" aria-pressed="true">ROS2 设计文档</button><button type="button" data-page="simulation" aria-pressed="false">生命周期仿真</button><button type="button" data-page="nav2" aria-pressed="false">nav2封装</button></nav>
+<main>
+<section id="design">
+  <h1>ROS 2 Managed Node 生命周期设计</h1>
+  <p class="muted">根据 ROS 2 Design 文档《Managed nodes》（原文编写于 2015 年，2021 年修订）整理。</p>
+  <section class="lead"><strong>一句话概括：</strong>Managed node 把节点的内部实现封装成黑盒，只对外提供一套标准的生命周期状态和管理接口。外部监督器据此完成启动、配置、运行、暂停、恢复、故障处理和销毁。</section>
+
+  <h2>一、重点解读：网页中的状态机图片</h2>
+  <figure>
+    <img src="https://design.ros2.org/img/node_lifecycle/life_cycle_sm.png" alt="ROS 2 节点生命周期状态机">
+    <figcaption>原设计文档中的 Node Life Cycle State Machine。若离线查看，请确保网络可访问该图片地址。</figcaption>
+  </figure>
+  <h3>图标含义</h3>
+  <table class="legend-table"><thead><tr><th>图中符号</th><th>含义</th></tr></thead><tbody>
+    <tr><td><span class="legend-symbol"></span>主状态</td><td>四个主状态（Primary States）使用蓝色圆角框；上半部分是状态名称，下半部分描述该状态下节点的行为，例如 <code>Active</code> 中的回调和定时器。</td></tr>
+    <tr><td><span class="legend-symbol transition-symbol"></span>过渡状态</td><td>六个过渡状态（Transition States）使用浅黄色圆角框；框内通常写明 <code>do / onXxx()</code>，表示正在执行对应生命周期回调。</td></tr>
+    <tr><td><span class="legend-symbol blue-line"></span>蓝色箭头线</td><td>表示<strong>外部管理器</strong>发起的生命周期动作，例如 <code>create</code>、<code>configure</code>、<code>cleanup</code>、<code>activate</code>、<code>deactivate</code>、<code>shutdown</code> 和 <code>destroy</code>。</td></tr>
+    <tr><td><span class="legend-symbol black-line"></span>黑色箭头线</td><td>表示过渡回调执行后的结果路径，通常标注 <code>[SUCCESS]</code> 或 <code>[FAILURE]</code>。</td></tr>
+    <tr><td><span class="legend-symbol start-symbol"></span>初始节点</td><td>黑色实心圆表示状态机的起点；沿 <code>create()</code> 进入 <code>Unconfigured</code>。</td></tr>
+    <tr><td><span class="legend-symbol final-symbol"></span>终止节点</td><td>黑色圆环（靶心）表示状态机的终点；<code>Finalized</code> 经 <code>destroy()</code> 后到达此处。</td></tr>
+    <tr><td><span class="legend-symbol error-symbol"></span>错误触发标记</td><td>过渡状态旁带 × 的红色圆形表示 <code>Error Raised</code>：该回调执行期间发生异常或返回错误结果，节点转入 <code>ErrorProcessing</code>。</td></tr>
+    <tr><td><span class="legend-symbol error-entry-symbol"></span>错误处理入口</td><td><code>ErrorProcessing</code> 旁不带 × 的红色圆形表示错误处理状态的入口标记；它与带 × 的错误触发标记含义不同，不表示再次发生了一次错误。</td></tr>
+  </tbody></table>
+
+  <h2>二、状态机的设计理念</h2>
+  <div class="grid">
+    <article class="card"><h3>1. 外部监督，节点自治受限</h3><p>主状态的离开通常需要外部 supervisor 的明确动作；这样 launch、编排器或恢复工具可以统一决定何时启动和停止组件。设计文档特别提醒：自管理虽然可行，但可能干扰外部管理逻辑。</p></article>
+    <article class="card"><h3>2. 配置与运行分离</h3><p><code>Inactive</code> 是关键缓冲区：节点已完成配置但不处理业务数据。可以在不改变运行行为的情况下重新配置资源，再由 <code>activate</code> 进入工作态。</p></article>
+    <article class="card"><h3>3. 可观测、可预测、可恢复</h3><p>每次转换都应报告结果，并通过生命周期状态事件广播新状态。失败可以回到 <code>Unconfigured</code>；无法清理时进入终态 <code>Finalized</code>，保留调试和 introspection 的机会。</p></article>
+    <article class="card"><h3>4. 稳定的公共契约</h3><p>管理工具不需要了解节点内部实现，只需依赖固定状态、转换、服务和状态事件。更复杂的业务状态机可以放在某个生命周期状态内部。</p></article>
+  </div>
+
+  <h2>三、四个主状态（Primary States）</h2>
+  <div class="grid">
+    <article class="card state"><h3>Unconfigured（未配置）</h3><p>节点刚实例化后的状态，没有应保留的配置状态。<code>configure</code> 可进入配置流程；也可以直接 <code>shutdown</code>。</p></article>
+    <article class="card state"><h3>Inactive（非活动）</h3><p>节点不执行业务处理，不读取或处理托管 topic 数据，也不响应托管服务请求。适合修改参数、发布/订阅关系及其他配置。可 <code>activate</code>、<code>cleanup</code> 或 <code>shutdown</code>。</p></article>
+    <article class="card state"><h3>Active（活动）</h3><p>节点正常工作：读取并处理数据、发布输出、响应服务请求。可 <code>deactivate</code> 或 <code>shutdown</code>；不可处理的错误会触发 <code>ErrorProcessing</code>。</p></article>
+    <article class="card state"><h3>Finalized（已终结）</h3><p>销毁前的终态，只能执行 <code>destroy</code>。它故意保留失败节点，便于调试、状态检查，或由 supervisor 按策略重建。</p></article>
+  </div>
+
+  <h2>四、六个过渡状态（Transition States）</h2>
+  <table><thead><tr><th>过渡状态</th><th>执行的回调</th><th>成功结果</th><th>失败/异常</th></tr></thead><tbody>
+    <tr><td>Configuring</td><td><code>onConfigure</code>：加载配置、建立长期资源和通信实体</td><td>Inactive</td><td>明确失败回 Unconfigured；其他错误进 ErrorProcessing</td></tr>
+    <tr><td>CleaningUp</td><td><code>onCleanup</code>：清空状态，恢复到类似刚创建的状态</td><td>Unconfigured</td><td>ErrorProcessing</td></tr>
+    <tr><td>Activating</td><td><code>onActivate</code>：取得仅在工作时需要的资源，完成启动准备</td><td>Active</td><td>ErrorProcessing</td></tr>
+    <tr><td>Deactivating</td><td><code>onDeactivate</code>：撤销激活阶段的改变，释放活动资源</td><td>Inactive</td><td>ErrorProcessing</td></tr>
+    <tr><td>ShuttingDown</td><td><code>onShutdown</code>：执行销毁前清理；回调可知道来源状态</td><td>Finalized</td><td>ErrorProcessing</td></tr>
+    <tr><td>ErrorProcessing</td><td><code>onError</code>：清理错误现场并尝试恢复</td><td>Unconfigured</td><td>无法完整清理则 Finalized</td></tr>
+  </tbody></table>
+
+  <h2>五、图中管理动作与事件</h2>
+  <table><thead><tr><th>动作</th><th>含义</th></tr></thead><tbody>
+    <tr><td><code>create</code></td><td>实例化节点；设计上除构造函数外不执行额外代码。</td></tr>
+    <tr><td><code>configure / cleanup</code></td><td>建立或清除长期配置资源，在 Unconfigured 与 Inactive 之间循环。</td></tr>
+    <tr><td><code>activate / deactivate</code></td><td>开始或停止业务处理，在 Inactive 与 Active 之间切换。</td></tr>
+    <tr><td><code>shutdown</code></td><td>从除 Finalized 外的主状态进入关闭流程，最终到 Finalized。</td></tr>
+    <tr><td><code>destroy</code></td><td>释放节点对象；通常对应析构函数或标准 deallocation。</td></tr>
+    <tr><td><code>lifecycle_state</code></td><td>状态变化事件。应广播最终状态、转换和结果码，并在每次转换触发时发布。</td></tr>
+  </tbody></table>
+
+  <h2>六、对导航系统的实际启示</h2>
+  <p>对导航栈而言，可以把地图、传感器、规划器和控制器的资源准备放入配置阶段，把硬件占用或实时处理放入激活阶段；需要重载参数或替换组件时先停到 Inactive，再 cleanup/configure；发生不可恢复异常时保留 Finalized 状态，让管理器记录原因并按策略销毁、重建。这样“节点是否已启动”和“节点是否允许执行任务”就不再是同一个模糊概念。</p>
+  <footer>参考：<a href="https://design.ros2.org/articles/node_lifecycle.html">ROS 2 Design — Managed nodes</a>；状态机图片：<a href="https://design.ros2.org/img/node_lifecycle/life_cycle_sm.png">life_cycle_sm.png</a>。</footer>
+</section>
+<section id="simulation" hidden>
+  <h1>生命周期仿真</h1>
+  <p class="muted">在浏览器中观察管理请求、节点回调和状态变化。此仿真不连接 ROS，也不会执行下面的命令。</p>
+  <div class="lead"><strong>外部管理器如何发起动作？</strong>管理器是另一个程序或命令行工具。它查询节点状态，向 <code>/节点名/change_state</code> 发送 <code>lifecycle_msgs/srv/ChangeState</code> 请求；节点检查转换是否合法，执行 <code>on_configure</code> 等回调，再返回 <code>success</code>。管理器应再次查询 <code>get_state</code> 确认状态，再发起下一步动作。</div>
+  <h2>交互仿真</h2>
+  <div class="simulation-layout">
+  <div class="simulation-visual">
+  <div class="machine-wrap">
+    <svg id="machine" viewBox="0 0 1160 790" role="img" aria-labelledby="machine-title machine-desc">
+      <title id="machine-title">交互式 ROS 2 生命周期状态机</title>
+      <desc id="machine-desc">蓝色框为主状态，黄色框为过渡状态；当前状态加粗高亮，橙色虚线表示最近执行路径。</desc>
+      <defs>
+        <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#2563eb"/></marker>
+        <marker id="arrow-result" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#334155"/></marker>
+        <marker id="arrow-live" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#c2410c"/></marker>
+      </defs>
+      <g id="machine-edges"></g><g id="machine-nodes"></g>
+    </svg>
+  </div>
+  <p class="muted">蓝框：主状态 · 黄框：过渡状态 · 蓝线：外部动作 · 灰黑线：回调结果 · 橙色流动线：最近一步 · 绿色线：本轮已执行路径。ERROR 路径由各过渡状态通往 ErrorProcessing。</p>
+  <p id="machine-event" role="status"></p>
+  <p id="machine-trace" class="machine-trace"></p>
+  <div id="state-strip" class="state-strip" aria-label="生命周期状态"></div>
+  </div>
+  <aside class="simulation-console" aria-label="执行与回调控制">
+  <h3>执行与回调</h3>
+  <p id="sim-status" role="status"></p>
+  <div class="sim-controls">
+    <label>目标节点 <input id="node-name" value="/lc_talker" spellcheck="false"></label>
+    <button id="reset-sim" type="button">重置仿真</button>
+  </div>
+  <h3>外部管理动作</h3>
+  <div id="actions" class="sim-controls" aria-label="可用生命周期动作"></div>
+  <p class="muted">点击动作进入过渡状态，再点击“完成回调”观察结果。灰色按钮表示当前状态不允许执行。create / destroy 演示对象创建与释放，不是 change_state 服务动作。</p>
+  <h3>节点回调结果</h3>
+  <div class="sim-controls">
+    <label>回调结果 <select id="callback-result"><option>SUCCESS</option><option>FAILURE</option><option>ERROR</option></select></label>
+    <label>on_error 结果 <select id="error-result"><option>SUCCESS</option><option>FAILURE</option><option>ERROR</option></select></label>
+  </div>
+  <button id="complete-callback" type="button" disabled>完成回调 → 查看结果</button>
+  <h3>请求与转换记录</h3>
+  <pre id="sim-log" class="sim-log" aria-live="polite"></pre>
+  </aside>
+  </div>
+  <details><summary>仿真规则与原设计图的区别</summary><p>此仿真采用 ROS 2 rcl 默认状态机：configure、activate、deactivate、cleanup 的 FAILURE 返回原主状态；shutdown 的 SUCCESS 和 FAILURE 均到 Finalized。ERROR 进入 ErrorProcessing；on_error 成功到 Unconfigured，失败或错误到 Finalized。原设计文档较早，部分失败路径与当前实现有差异。普通业务回调抛异常并不保证所有客户端库都会自动进入 ErrorProcessing；这里仅模拟生命周期转换回调的 ERROR。</p><p>Active 也不代表框架自动屏蔽所有普通订阅、服务或定时器；开发者需要在节点实现中管理这些业务行为。</p></details>
+  <h2>外部管理器调用例程</h2>
+  <div class="sim-controls"><label>示例动作 <select id="example-action"><option>configure</option><option>activate</option><option>deactivate</option><option>cleanup</option><option>shutdown</option></select></label><label>shutdown 来源 <select id="shutdown-source"><option>Unconfigured</option><option>Inactive</option><option>Active</option></select></label></div>
+  <p id="example-info"></p>
+  <p>前提：已 source ROS 2 环境，目标是开启生命周期服务的节点，且正在 spin。两个终端使用相同的 ROS_DOMAIN_ID。可以在另一个终端运行官方示例（需要安装 lifecycle 包）：<code>ros2 run lifecycle lifecycle_talker</code>，默认节点名为 <code>/lc_talker</code>。下列四种方式是替代方案，同一转换成功后不要重复执行。</p>
+  <div class="code-tabs" aria-label="代码语言"><button data-code="lifecycle" aria-pressed="true">ros2 lifecycle</button><button data-code="service" aria-pressed="false">ros2 service</button><button data-code="cpp" aria-pressed="false">C++</button><button data-code="python" aria-pressed="false">Python</button><button id="copy-code">复制代码</button></div>
+  <p id="code-note" class="muted"></p><pre class="example-pre" data-language="bash"><code id="example-code" class="language-bash"></code></pre>
+  <details><summary>C++ 构建方式</summary><p>创建 ament_cmake 包，将 C++ 示例保存为包内的 <code>src/lifecycle_client.cpp</code>：</p><pre class="example-pre" data-language="bash">ros2 pkg create --build-type ament_cmake lifecycle_manager_demo --dependencies rclcpp lifecycle_msgs</pre><p>在 CMakeLists.txt 的 ament_package() 之前加入：</p><pre class="example-pre" data-language="cmake">find_package(rclcpp REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
+add_executable(lifecycle_client src/lifecycle_client.cpp)
+ament_target_dependencies(lifecycle_client rclcpp lifecycle_msgs)
+install(TARGETS lifecycle_client DESTINATION lib/${PROJECT_NAME})</pre><p>在工作区根目录执行：</p><pre class="example-pre" data-language="bash">colcon build --packages-select lifecycle_manager_demo
+source install/setup.bash
+ros2 run lifecycle_manager_demo lifecycle_client</pre></details>
+  <p>转换 ID：configure = 1，cleanup = 2，activate = 3，deactivate = 4；shutdown 从 Unconfigured / Inactive / Active 发起时分别为 5 / 6 / 7。创建节点由程序或 launch 完成，销毁由对象所有者完成；Finalized 不等于进程已退出。</p>
+  <footer>参考：<a href="https://github.com/ros2/demos/blob/rolling/lifecycle/README.rst">ROS 2 官方 lifecycle 示例</a> · <a href="https://github.com/ros2/rcl/blob/rolling/rcl_lifecycle/src/default_state_machine.c">rcl 默认状态机</a> · <a href="https://github.com/ros2/rcl_interfaces/blob/rolling/lifecycle_msgs/msg/Transition.msg">Transition ID 定义</a></footer>
+</section>
+<section id="nav2" hidden>
+  <h1>Nav2 生命周期节点：三项关键封装</h1>
+  <p class="muted">仅解读当前工作区的 <button type="button" class="source-link" data-source="hpp">lifecycle_node.hpp</button> 与 <button type="button" class="source-link" data-source="cpp">lifecycle_node.cpp</button>。点击查看嵌入本页的完整源码快照（带语法高亮，无需访问本地文件）。</p>
+  <p class="muted">参考源码仓库：<a href="https://github.com/ros-navigation/navigation2/tree/humble" target="_blank" rel="noopener">ros-navigation/navigation2 · humble 分支</a>。弹窗展示当前工作区的代码快照，可能与远程分支后续更新不同。</p>
+  <div class="lead"><code>nav2_util::LifecycleNode</code> 在原生生命周期节点之上，为 Nav2 节点提供共同的<strong>连接维护</strong>与<strong>退出清理</strong>机制。阅读时抓住三个问题：它继承了什么？Bond 何时建立和释放？Context 关闭前如何清理？</div>
+
+  <h2>一、继承关系：保留原生状态机，补充公共机制</h2>
+  <figure class="nav2-diagram"><button type="button" class="diagram-open" aria-label="放大查看继承关系">
+<svg class="nav2-inline-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 430" role="img" aria-labelledby="nvdiagram-nav2-node-inheritance-title"><title id="nvdiagram-nav2-node-inheritance-title">继承关系：原生状态机、Nav2 公共机制、业务实现</title><defs><marker id="nvdiagram-nav2-node-inheritance-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8" fill="#64748b"/></marker></defs><style>.nav2-inline-diagram text{font-family:system-ui,'Microsoft YaHei',sans-serif;font-size:16px;fill:#172033}.nav2-inline-diagram .heading{font-size:20px;font-weight:700}.nav2-inline-diagram .small{font-size:14px;fill:#475569}.nav2-inline-diagram .arrow{stroke:#64748b;stroke-width:2;fill:none;marker-end:url(#nvdiagram-nav2-node-inheritance-arrow)}</style><rect width="1040" height="430" rx="14" fill="#f8fafc"/>
+<rect x="250" y="30" width="540" height="90" rx="12" fill="#dbeafe" stroke="#93c5fd"/>
+<text x="280" y="65" class="heading">rclcpp_lifecycle::LifecycleNode</text><text x="280" y="97">原生生命周期状态机、转换接口和回调机制</text>
+<path d="M520 120 V165" class="arrow"/><text x="540" y="148" class="small">public 继承</text>
+<rect x="250" y="170" width="540" height="90" rx="12" fill="#fef3c7" stroke="#fbbf24"/>
+<text x="280" y="205" class="heading">nav2_util::LifecycleNode</text><text x="280" y="237">增加 Bond 连接与 Context 关闭前清理</text>
+<path d="M520 260 V305" class="arrow"/><text x="540" y="288" class="small">业务类继承</text>
+<rect x="250" y="310" width="540" height="90" rx="12" fill="#dcfce7" stroke="#86efac"/>
+<text x="280" y="345" class="heading">具体业务节点，如 PlannerServer</text><text x="280" y="377">实现 on_configure / on_activate 等资源管理回调</text></svg>
+  </button><figcaption>向下看是继承关系；业务节点同时拥有原生生命周期能力与 Nav2 公共机制。点击图片可放大。</figcaption></figure>
+  <p>头文件使用 <code>public</code> 继承；实现文件的构造函数把节点名称、命名空间和 NodeOptions 传给原生基类。因此生命周期的状态、转换和管理接口沿用 ROS 2 的机制，这层封装没有新增主状态，也不会自动执行 configure 或 activate。</p>
+  <pre class="example-pre" data-language="cpp"><code>// lifecycle_node.hpp：公开继承原生节点
+class LifecycleNode : public rclcpp_lifecycle::LifecycleNode
+{
+  // Nav2 公共机制
+};
+
+// lifecycle_node.cpp：构造函数初始化列表
+: rclcpp_lifecycle::LifecycleNode(node_name, ns, options)</code></pre>
+  <p><strong>业务节点仍负责：</strong>实现配置、激活、停用和清理回调中的业务逻辑，例如创建通信对象、启动处理、停止任务和释放资源。Nav2 基类提供公共机制，不自动完成这些业务操作。</p>
+
+  <h2>二、Bond 心跳连接：维护节点与管理器之间的连接</h2>
+  <figure class="nav2-diagram"><button type="button" class="diagram-open" aria-label="放大查看Bond 心跳连接">
+<svg class="nav2-inline-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 460" role="img" aria-labelledby="nvdiagram-nav2-node-bond-title"><title id="nvdiagram-nav2-node-bond-title">Bond 连接：心跳机制与生命周期管理请求分工</title><defs><marker id="nvdiagram-nav2-node-bond-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8" fill="#64748b"/></marker></defs><style>.nav2-inline-diagram text{font-family:system-ui,'Microsoft YaHei',sans-serif;font-size:16px;fill:#172033}.nav2-inline-diagram .heading{font-size:20px;font-weight:700}.nav2-inline-diagram .small{font-size:14px;fill:#475569}.nav2-inline-diagram .arrow{stroke:#64748b;stroke-width:2;fill:none;marker-end:url(#nvdiagram-nav2-node-bond-arrow)}</style><rect width="1040" height="460" rx="14" fill="#f8fafc"/>
+<rect x="40" y="70" width="300" height="140" rx="12" fill="#dbeafe" stroke="#93c5fd"/>
+<text x="75" y="115" class="heading">外部生命周期管理器</text><text x="75" y="150">发起状态转换请求</text><text x="75" y="180">管理器侧策略由其自身实现</text>
+<rect x="700" y="70" width="300" height="140" rx="12" fill="#fef3c7" stroke="#fbbf24"/>
+<text x="725" y="115" class="heading">Nav2 生命周期节点</text><text x="725" y="150">执行转换与业务回调</text><text x="725" y="180">持有 bond_ 连接对象</text>
+<path d="M340 110 H700" class="arrow"/><text x="400" y="96">change_state：管理请求</text>
+<path d="M340 180 H700" class="arrow" marker-start="url(#nvdiagram-nav2-node-bond-arrow)"/><text x="415" y="165">Bond：心跳连接</text>
+<rect x="40" y="260" width="460" height="125" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="65" y="293" class="heading">createBond()</text><text x="65" y="325">主题：bond · 标识：get_name()</text><text x="65" y="355">周期 0.10 秒 → start() 启动</text>
+<rect x="540" y="260" width="460" height="125" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="565" y="293" class="heading">destroyBond()</text><text x="565" y="325">若 bond_ 存在 → reset()</text><text x="565" y="355">释放连接对象</text>
+<text x="40" y="425" class="small">构造函数不自动创建 Bond；它禁用节点侧心跳超时判断，不能把设置的 4 秒理解为自动退出时限。</text></svg>
+  </button><figcaption>管理请求用于改变状态，Bond 用于连接存活监测；心跳存在不代表业务任务一定正常。</figcaption></figure>
+  <table><thead><tr><th>关键位置</th><th>源码行为</th><th>如何理解</th></tr></thead><tbody>
+    <tr><td>构造函数</td><td>声明并设置禁用心跳超时的参数为 true。</td><td>节点侧不会因管理器心跳超时而自行判定连接失败。管理器侧的检测和恢复策略不在这两个文件中。</td></tr>
+    <tr><td><code>createBond()</code></td><td>创建 Bond 对象，使用主题名 <code>bond</code>、节点名作为标识、当前节点共享指针；设置周期 0.10 秒、超时值 4.0 秒，然后 start()。</td><td>提供建立连接的公共方法。构造函数没有调用它，具体业务节点需在合适时机主动调用。</td></tr>
+    <tr><td><code>destroyBond()</code></td><td>若 bond_ 存在，调用 reset()。</td><td>释放连接对象；Context 关闭前的回调也会主动调用此方法。</td></tr>
+  </tbody></table>
+  <pre class="example-pre" data-language="cpp"><code>// createBond() 的核心实现
+bond_ = std::make_unique&lt;bond::Bond&gt;(
+  std::string("bond"), this-&gt;get_name(), shared_from_this());
+bond_-&gt;setHeartbeatPeriod(0.10);
+bond_-&gt;setHeartbeatTimeout(4.0);
+bond_-&gt;start();
+
+// destroyBond() 的核心实现
+if (bond_) {
+  bond_.reset();
+}</code></pre>
+  <p><strong>注意这两个细节：</strong>节点侧超时判断已被禁用，因此 4.0 秒不能解读为“节点会在 4 秒后自动退出”；createBond() 使用 shared_from_this()，应在对象已有有效共享所有权后调用，不应直接搬到构造函数里执行。</p>
+
+  <h2>三、退出清理：在 Context 关闭前尽力停用、清理资源</h2>
+  <figure class="nav2-diagram"><button type="button" class="diagram-open" aria-label="放大查看退出清理流程">
+<svg class="nav2-inline-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 600" role="img" aria-labelledby="nvdiagram-nav2-lifecycle-exit-title"><title id="nvdiagram-nav2-lifecycle-exit-title">图 3 · Context 关闭前，节点做了什么？</title><defs><marker id="nvdiagram-nav2-lifecycle-exit-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8" fill="#64748b"/></marker></defs><style>.nav2-inline-diagram text{font-family:system-ui,'Microsoft YaHei',sans-serif;fill:#172033;font-size:16px}.nav2-inline-diagram .title{font-size:24px;font-weight:700}.nav2-inline-diagram .heading{font-size:18px;font-weight:700}.nav2-inline-diagram .small{font-size:14px;fill:#475569}.nav2-inline-diagram .line{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#nvdiagram-nav2-lifecycle-exit-arrow)}</style><rect width="1040" height="600" fill="#f8fafc" rx="14"/><text x="32" y="42" class="title">图 3 · Context 关闭前，节点做了什么？</text><rect x="30" y="90" width="280" height="95" rx="10" fill="#dbeafe" stroke="#94a3b8"/><text x="48" y="120" class="heading">Context 即将关闭</text><text x="48" y="150" class="small">触发已注册的 pre-shutdown 回调</text><rect x="370" y="90" width="300" height="95" rx="10" fill="#dbeafe" stroke="#94a3b8"/><text x="388" y="120" class="heading">on_rcl_preshutdown()</text><text x="388" y="150" class="small">先执行 runCleanups()</text><path d="M310 138 H370" class="line"/><rect x="370" y="240" width="300" height="95" rx="10" fill="#fef3c7" stroke="#94a3b8"/><text x="388" y="270" class="heading">检查 1：当前为 Active？</text><text x="388" y="300" class="small">是 → deactivate()；否 → 跳过</text><path d="M520 185 V240" class="line"/><rect x="370" y="390" width="300" height="95" rx="10" fill="#fef3c7" stroke="#94a3b8"/><text x="388" y="420" class="heading">检查 2：当前为 Inactive？</text><text x="388" y="450" class="small">是 → cleanup()；否 → 跳过</text><path d="M520 335 V390" class="line"/><text x="690" y="365" class="small">重新读取实际状态</text><rect x="730" y="390" width="280" height="95" rx="10" fill="#dcfce7" stroke="#94a3b8"/><text x="748" y="420" class="heading">destroyBond()</text><text x="748" y="450" class="small">释放连接，Context 继续关闭</text><path d="M670 438 H730" class="line"/><text x="35" y="540" class="small">两个独立 if：deactivate 成功后可继续 cleanup；失败后按实际状态决定下一步。</text><text x="35" y="572" class="small">这里不调用生命周期 shutdown()，也不保证进入 Finalized；析构另外执行清理并注销回调。</text></svg>
+  </button><figcaption>两个独立的状态检查：第一步改变状态后，第二步按实际状态决定是否继续清理。</figcaption></figure>
+  <table><thead><tr><th>时机</th><th>执行顺序</th><th>作用</th></tr></thead><tbody>
+    <tr><td>节点构造时</td><td><code>register_rcl_preshutdown_callback()</code> 向节点所属 Context 注册回调并保存句柄。</td><td>让节点能在 Context 尚未关闭时获得清理机会。</td></tr>
+    <tr><td>Context 关闭前</td><td><code>on_rcl_preshutdown()</code> → runCleanups() → destroyBond()。</td><td>先尝试停用与清理，再释放心跳连接。</td></tr>
+    <tr><td>节点析构时</td><td>再次调用 runCleanups()；若回调句柄存在，将其从 Context 移除并释放句柄。</td><td>执行兜底清理，并解除绑定 this 的回调注册。</td></tr>
+  </tbody></table>
+  <pre class="example-pre" data-language="cpp"><code>// runCleanups()：源码中的两个独立 if
+if (get_current_state().id() ==
+  lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+{
+  this-&gt;deactivate();
+}
+
+if (get_current_state().id() ==
+  lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+{
+  this-&gt;cleanup();
+}</code></pre>
+  <p>若 deactivate() 成功进入 Inactive，紧接着就会执行 cleanup()；若停用后仍为 Active 或进入其他状态，第二个条件就不成立。这是源码所说的 <strong>best effort（尽力清理）</strong>：没有重试，也没有覆盖所有过渡状态。</p>
+  <p><strong>Context 退出不等于生命周期 shutdown。</strong>这条路径没有主动调用 shutdown()，不以进入 Finalized 为目标。应优先在对象完整存活时完成正常停用和清理；基类析构阶段受 C++ 虚函数分派规则限制，不能保证派生类业务清理回调完整执行。</p>
+  <footer>源码：<button type="button" class="source-link" data-source="hpp">生命周期节点头文件</button> · <button type="button" class="source-link" data-source="cpp">生命周期节点实现文件</button>。本页说明以嵌入的本地源码快照为准；参考 <a href="https://github.com/ros-navigation/navigation2/tree/humble" target="_blank" rel="noopener">navigation2 仓库的 humble 分支</a>。</footer>
+</section>
+</main>
+<dialog id="diagram-dialog" aria-labelledby="diagram-dialog-title">
+  <div class="source-dialog-header"><h2 id="diagram-dialog-title">图解放大查看</h2><button type="button" id="close-diagram" autofocus>关闭 ×</button></div>
+  <div id="diagram-display"></div>
+</dialog>
+<dialog id="source-dialog" aria-labelledby="source-dialog-title" aria-describedby="source-dialog-note">
+  <div class="source-dialog-header"><h2 id="source-dialog-title">源码查看</h2><button type="button" id="close-source" autofocus aria-label="关闭源码弹窗">关闭 ×</button></div>
+  <p id="source-dialog-note" class="muted">本页内嵌的工作区源码快照，可离线查看；修改本地源文件后需重新嵌入才能更新。参考 <a href="https://github.com/ros-navigation/navigation2/tree/humble" target="_blank" rel="noopener">navigation2 · humble 分支</a>。</p>
+  <div class="code-tabs" aria-label="源码文件"><button type="button" data-source-tab="hpp" aria-pressed="false">lifecycle_node.hpp</button><button type="button" data-source-tab="cpp" aria-pressed="false">lifecycle_node.cpp</button><button type="button" id="copy-source">复制源码</button><span id="source-copy-status" role="status"></span></div>
+  <pre class="example-pre source-code-pre" data-language="cpp" tabindex="0" aria-label="完整 C++ 源码"><code id="source-dialog-code" class="language-cpp"></code></pre>
+</dialog>
+<script id="embedded-lifecycle-sources" type="application/json">{"hpp":{"name":"lifecycle_node.hpp","code":"// Copyright (c) 2019 Intel Corporation\n//\n// Licensed under the Apache License, Version 2.0 (the \"License\");\n// you may not use this file except in compliance with the License.\n// You may obtain a copy of the License at\n//\n//     http://www.apache.org/licenses/LICENSE-2.0\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\n\n#ifndef NAV2_UTIL__LIFECYCLE_NODE_HPP_\n#define NAV2_UTIL__LIFECYCLE_NODE_HPP_\n\n#include \u003cmemory>\n#include \u003cstring>\n#include \u003cthread>\n\n#include \"nav2_util/node_thread.hpp\"\n#include \"rclcpp_lifecycle/lifecycle_node.hpp\"\n#include \"rclcpp/rclcpp.hpp\"\n#include \"bondcpp/bond.hpp\"\n#include \"bond/msg/constants.hpp\"\n\nnamespace nav2_util\n{\n\nusing CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;\n\n/**\n * @class nav2_util::LifecycleNode\n * @brief A lifecycle node wrapper to enable common Nav2 needs such as manipulating parameters\n */\nclass LifecycleNode : public rclcpp_lifecycle::LifecycleNode\n{\npublic:\n  /**\n   * @brief A lifecycle node constructor\n   * @param node_name Name for the node\n   * @param namespace Namespace for the node, if any\n   * @param options Node options\n   */\n  LifecycleNode(\n    const std::string & node_name,\n    const std::string & ns = \"\",\n    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());\n  virtual ~LifecycleNode();\n\n  typedef struct\n  {\n    double from_value;\n    double to_value;\n    double step;\n  } floating_point_range;\n\n  typedef struct\n  {\n    int from_value;\n    int to_value;\n    int step;\n  } integer_range;\n\n  /**\n   * @brief Declare a parameter that has no integer or floating point range constraints\n   * @param node_name Name of parameter\n   * @param default_value Default node value to add\n   * @param description Node description\n   * @param additional_constraints Any additional constraints on the parameters to list\n   * @param read_only Whether this param should be considered read only\n   */\n  void add_parameter(\n    const std::string & name, const rclcpp::ParameterValue & default_value,\n    const std::string & description = \"\", const std::string & additional_constraints = \"\",\n    bool read_only = false)\n  {\n    auto descriptor = rcl_interfaces::msg::ParameterDescriptor();\n\n    descriptor.name = name;\n    descriptor.description = description;\n    descriptor.additional_constraints = additional_constraints;\n    descriptor.read_only = read_only;\n\n    declare_parameter(descriptor.name, default_value, descriptor);\n  }\n\n  /**\n   * @brief Declare a parameter that has a floating point range constraint\n   * @param node_name Name of parameter\n   * @param default_value Default node value to add\n   * @param fp_range floating point range\n   * @param description Node description\n   * @param additional_constraints Any additional constraints on the parameters to list\n   * @param read_only Whether this param should be considered read only\n   */\n  void add_parameter(\n    const std::string & name, const rclcpp::ParameterValue & default_value,\n    const floating_point_range fp_range,\n    const std::string & description = \"\", const std::string & additional_constraints = \"\",\n    bool read_only = false)\n  {\n    auto descriptor = rcl_interfaces::msg::ParameterDescriptor();\n\n    descriptor.name = name;\n    descriptor.description = description;\n    descriptor.additional_constraints = additional_constraints;\n    descriptor.read_only = read_only;\n    descriptor.floating_point_range.resize(1);\n    descriptor.floating_point_range[0].from_value = fp_range.from_value;\n    descriptor.floating_point_range[0].to_value = fp_range.to_value;\n    descriptor.floating_point_range[0].step = fp_range.step;\n\n    declare_parameter(descriptor.name, default_value, descriptor);\n  }\n\n  /**\n   * @brief Declare a parameter that has an integer range constraint\n   * @param node_name Name of parameter\n   * @param default_value Default node value to add\n   * @param integer_range Integer range\n   * @param description Node description\n   * @param additional_constraints Any additional constraints on the parameters to list\n   * @param read_only Whether this param should be considered read only\n   */\n  void add_parameter(\n    const std::string & name, const rclcpp::ParameterValue & default_value,\n    const integer_range int_range,\n    const std::string & description = \"\", const std::string & additional_constraints = \"\",\n    bool read_only = false)\n  {\n    auto descriptor = rcl_interfaces::msg::ParameterDescriptor();\n\n    descriptor.name = name;\n    descriptor.description = description;\n    descriptor.additional_constraints = additional_constraints;\n    descriptor.read_only = read_only;\n    descriptor.integer_range.resize(1);\n    descriptor.integer_range[0].from_value = int_range.from_value;\n    descriptor.integer_range[0].to_value = int_range.to_value;\n    descriptor.integer_range[0].step = int_range.step;\n\n    declare_parameter(descriptor.name, default_value, descriptor);\n  }\n\n  /**\n   * @brief Get a shared pointer of this\n   */\n  std::shared_ptr\u003cnav2_util::LifecycleNode> shared_from_this()\n  {\n    return std::static_pointer_cast\u003cnav2_util::LifecycleNode>(\n      rclcpp_lifecycle::LifecycleNode::shared_from_this());\n  }\n\n  /**\n   * @brief Abstracted on_error state transition callback, since unimplemented as of 2020\n   * in the managed ROS2 node state machine\n   * @param state State prior to error transition\n   * @return Return type for success or failed transition to error state\n   */\n  nav2_util::CallbackReturn on_error(const rclcpp_lifecycle::State & /*state*/)\n  {\n    RCLCPP_FATAL(\n      get_logger(),\n      \"Lifecycle node %s does not have error state implemented\", get_name());\n    return nav2_util::CallbackReturn::SUCCESS;\n  }\n\n  /**\n   * @brief Perform preshutdown activities before our Context is shutdown.\n   * Note that this is related to our Context's shutdown sequence, not the\n   * lifecycle node state machine.\n   */\n  virtual void on_rcl_preshutdown();\n\n  /**\n   * @brief Create bond connection to lifecycle manager\n   */\n  void createBond();\n\n  /**\n   * @brief Destroy bond connection to lifecycle manager\n   */\n  void destroyBond();\n\nprotected:\n  /**\n   * @brief Print notifications for lifecycle node\n   */\n  void printLifecycleNodeNotification();\n\n  /**\n   * Register our preshutdown callback for this Node's rcl Context.\n   * The callback fires before this Node's Context is shutdown.\n   * Note this is not directly related to the lifecycle state machine.\n   */\n  void register_rcl_preshutdown_callback();\n  std::unique_ptr\u003crclcpp::PreShutdownCallbackHandle> rcl_preshutdown_cb_handle_{nullptr};\n\n  /**\n   * Run some common cleanup steps shared between rcl preshutdown and destruction.\n   */\n  void runCleanups();\n\n  // Connection to tell that server is still up\n  std::unique_ptr\u003cbond::Bond> bond_{nullptr};\n};\n\n}  // namespace nav2_util\n\n#endif  // NAV2_UTIL__LIFECYCLE_NODE_HPP_\n"},"cpp":{"name":"lifecycle_node.cpp","code":"// Copyright (c) 2019 Intel Corporation\n//\n// Licensed under the Apache License, Version 2.0 (the \"License\");\n// you may not use this file except in compliance with the License.\n// You may obtain a copy of the License at\n//\n//     http://www.apache.org/licenses/LICENSE-2.0\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\n\n#include \"nav2_util/lifecycle_node.hpp\"\n\n#include \u003cmemory>\n#include \u003cstring>\n#include \u003cvector>\n\n#include \"lifecycle_msgs/msg/state.hpp\"\n\nnamespace nav2_util\n{\n\nLifecycleNode::LifecycleNode(\n  const std::string & node_name,\n  const std::string & ns,\n  const rclcpp::NodeOptions & options)\n: rclcpp_lifecycle::LifecycleNode(node_name, ns, options)\n{\n  // server side never times out from lifecycle manager\n  this->declare_parameter(bond::msg::Constants::DISABLE_HEARTBEAT_TIMEOUT_PARAM, true);\n  this->set_parameter(\n    rclcpp::Parameter(\n      bond::msg::Constants::DISABLE_HEARTBEAT_TIMEOUT_PARAM, true));\n\n  printLifecycleNodeNotification();\n\n  register_rcl_preshutdown_callback();\n}\n\nLifecycleNode::~LifecycleNode()\n{\n  RCLCPP_INFO(get_logger(), \"Destroying\");\n\n  runCleanups();\n\n  if (rcl_preshutdown_cb_handle_) {\n    rclcpp::Context::SharedPtr context = get_node_base_interface()->get_context();\n    context->remove_pre_shutdown_callback(*(rcl_preshutdown_cb_handle_.get()));\n    rcl_preshutdown_cb_handle_.reset();\n  }\n}\n\nvoid LifecycleNode::createBond()\n{\n  RCLCPP_INFO(get_logger(), \"Creating bond (%s) to lifecycle manager.\", this->get_name());\n\n  bond_ = std::make_unique\u003cbond::Bond>(\n    std::string(\"bond\"),\n    this->get_name(),\n    shared_from_this());\n\n  bond_->setHeartbeatPeriod(0.10);\n  bond_->setHeartbeatTimeout(4.0);\n  bond_->start();\n}\n\nvoid LifecycleNode::runCleanups()\n{\n  /*\n   * In case this lifecycle node wasn't properly shut down, do it here.\n   * We will give the user some ability to clean up properly here, but it's\n   * best effort; i.e. we aren't trying to account for all possible states.\n   */\n  if (get_current_state().id() ==\n    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)\n  {\n    this->deactivate();\n  }\n\n  if (get_current_state().id() ==\n    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)\n  {\n    this->cleanup();\n  }\n}\n\nvoid LifecycleNode::on_rcl_preshutdown()\n{\n  RCLCPP_INFO(\n    get_logger(), \"Running Nav2 LifecycleNode rcl preshutdown (%s)\",\n    this->get_name());\n\n  runCleanups();\n\n  destroyBond();\n}\n\nvoid LifecycleNode::register_rcl_preshutdown_callback()\n{\n  rclcpp::Context::SharedPtr context = get_node_base_interface()->get_context();\n\n  rcl_preshutdown_cb_handle_ = std::make_unique\u003crclcpp::PreShutdownCallbackHandle>(\n    context->add_pre_shutdown_callback(\n      std::bind(&LifecycleNode::on_rcl_preshutdown, this))\n  );\n}\n\nvoid LifecycleNode::destroyBond()\n{\n  RCLCPP_INFO(get_logger(), \"Destroying bond (%s) to lifecycle manager.\", this->get_name());\n\n  if (bond_) {\n    bond_.reset();\n  }\n}\n\nvoid LifecycleNode::printLifecycleNodeNotification()\n{\n  RCLCPP_INFO(\n    get_logger(),\n    \"\\n\\t%s lifecycle node launched. \\n\"\n    \"\\tWaiting on external lifecycle transitions to activate\\n\"\n    \"\\tSee https://design.ros2.org/articles/node_lifecycle.html for more information.\", get_name());\n}\n\n}  // namespace nav2_util\n"}}</script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  document.querySelectorAll('.diagram-open').forEach(button => button.addEventListener('click', () => {
+    const svg = button.querySelector('svg');
+    $('diagram-dialog-title').textContent = svg.querySelector('title').textContent;
+    // Only clone this page's static SVG; give all SVG IDs/references a separate namespace.
+    $('diagram-display').innerHTML = svg.outerHTML.replaceAll('nvdiagram-', 'nvzoom-');
+    $('diagram-dialog').showModal();
+  }));
+  $('close-diagram').addEventListener('click', () => $('diagram-dialog').close());
+  $('diagram-dialog').addEventListener('close', () => $('diagram-display').replaceChildren());
+  const embeddedSources = JSON.parse($('embedded-lifecycle-sources').textContent);
+  const sourceDialog = $('source-dialog');
+  function selectSource(key) {
+    const source = embeddedSources[key];
+    if (!source) return;
+    $('source-dialog-title').textContent = source.name + ' · 本地源码快照';
+    highlightCode($('source-dialog-code'), 'cpp', source.code);
+    $('source-dialog-code').parentElement.scrollTop = 0;
+    $('source-dialog-code').parentElement.scrollLeft = 0;
+    $('source-copy-status').textContent = '';
+    document.querySelectorAll('[data-source-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sourceTab === key)));
+  }
+  document.querySelectorAll('[data-source]').forEach(b => b.addEventListener('click', () => {
+    selectSource(b.dataset.source);
+    sourceDialog.showModal();
+  }));
+  document.querySelectorAll('[data-source-tab]').forEach(b => b.addEventListener('click', () => selectSource(b.dataset.sourceTab)));
+  $('close-source').addEventListener('click', () => sourceDialog.close());
+  sourceDialog.addEventListener('click', event => {
+    if (event.target !== sourceDialog) return;
+    const bounds = sourceDialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) sourceDialog.close();
+  });
+  $('copy-source').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText($('source-dialog-code').textContent);
+      $('source-copy-status').textContent = '已复制完整源码。';
+    } catch {
+      $('source-copy-status').textContent = '无法自动复制，请在代码区手动选择并复制。';
+    }
+  });
+  // Local lexical highlighting: language declarations also work when opened offline.
+  function highlightCode(code, language, source = code.textContent) {
+    const keywords = new Set(('class struct public private protected virtual override const auto using namespace template typename return if else try catch throw int double bool void true false nullptr include def import from as finally raise not or and is in for while with pass None True False').split(' '));
+    const types = new Set(('std rclcpp rclcpp_lifecycle nav2_util lifecycle_msgs string shared_ptr unique_ptr floating_point_range integer_range size_t').split(' '));
+    const tokenPattern = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|\b\d+(?:\.\d+)?(?:s|ms)?\b|[A-Za-z_]\w*|\s+|./g;
+    const fragment = document.createDocumentFragment();
+    for (const match of source.matchAll(tokenPattern)) {
+      const token = match[0];
+      let kind = '';
+      if ((language === 'cpp' && /^(\/\/|\/\*)/.test(token)) ||
+          (language !== 'cpp' && token.startsWith('#'))) kind = 'comment';
+      else if (language === 'cpp' && token.startsWith('#')) {
+        // Split include directives so header strings retain their own color.
+        const include = token.match(/^(#\s*include)(\s+)([<"].*[>"])$/);
+        if (include) {
+          const directive = document.createElement('span');
+          directive.className = 'tok-directive'; directive.textContent = include[1];
+          const header = document.createElement('span');
+          header.className = 'tok-string'; header.textContent = include[3];
+          fragment.append(directive, document.createTextNode(include[2]), header);
+          continue;
+        }
+        kind = 'directive';
+      }
+      else if (/^["']/.test(token)) kind = 'string';
+      else if (/^\d/.test(token)) kind = 'number';
+      else if (/^[A-Za-z_]\w*$/.test(token)) {
+        if (keywords.has(token)) kind = 'keyword';
+        else if (/^[A-Z][A-Z0-9_]+$/.test(token)) kind = 'constant';
+        else if (types.has(token) || /^[A-Z]/.test(token)) kind = 'type';
+        else if (/^\s*\(/.test(source.slice(match.index + token.length))) kind = 'function';
+        else if (language === 'bash' && ['ros2','colcon','source','python3'].includes(token)) kind = 'function';
+      }
+      if (kind) {
+        const span = document.createElement('span');
+        span.className = 'tok-' + kind; span.textContent = token; fragment.append(span);
+      } else fragment.append(document.createTextNode(token));
+    }
+    code.className = 'language-' + language;
+    code.replaceChildren(fragment);
+    code.parentElement.dataset.language = language;
+  }
+  document.querySelectorAll('.example-pre[data-language]').forEach(pre => {
+    let code = pre.querySelector('code');
+    if (!code) {
+      const source = pre.textContent;
+      code = document.createElement('code'); code.textContent = source;
+      pre.replaceChildren(code);
+    }
+    highlightCode(code, pre.dataset.language);
+  });
+  function showPage() {
+    const pages = ['design', 'simulation', 'nav2'];
+    const page = pages.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'design';
+    pages.forEach(id => { $(id).hidden = id !== page; });
+    document.querySelectorAll('[data-page]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.page === page)));
+  }
+  document.querySelectorAll('[data-page]').forEach(b => b.onclick = () => { location.hash = b.dataset.page; });
+  window.addEventListener('hashchange', showPage); showPage();
+  const rules = {
+    configure: {from:'Unconfigured', via:'Configuring', to:'Inactive', id:1},
+    cleanup: {from:'Inactive', via:'CleaningUp', to:'Unconfigured', id:2},
+    activate: {from:'Inactive', via:'Activating', to:'Active', id:3},
+    deactivate: {from:'Active', via:'Deactivating', to:'Inactive', id:4}
+  };
+  let state = 'Unconfigured', pending = null, codeMode = 'lifecycle';
+  const primaryIds = {Unconfigured:1, Inactive:2, Active:3, Finalized:4};
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const graphNodes = {
+    '未创建':[480,25,'初始节点'], Unconfigured:[480,100,'等待 configure'],
+    Configuring:[740,210,'on_configure()'], Inactive:[480,330,'已配置，未激活'],
+    Activating:[740,450,'on_activate()'], Active:[480,570,'callbacks / timers'],
+    CleaningUp:[240,210,'on_cleanup()'], Deactivating:[240,450,'on_deactivate()'],
+    ShuttingDown:[1000,450,'on_shutdown()'], Finalized:[1000,680,'等待 destroy'],
+    ErrorProcessing:[100,100,'on_error()'], '已销毁':[1000,755,'终止节点']
+  };
+  const edges = new Map(), nodeElements = new Map(), visitedEdges = new Set();
+  let latestEdge = '', trace = ['Unconfigured'], eventText = '节点已创建，等待外部管理器发起动作。';
+  function svgEl(tag, attrs, parent, text) {
+    const el = document.createElementNS(svgNS, tag);
+    Object.entries(attrs).forEach(([key,value]) => el.setAttribute(key, value));
+    if (text !== undefined) el.textContent = text;
+    parent.append(el); return el;
+  }
+  function addEdge(id, from, to, path, label, x, y, kind = '') {
+    const g = svgEl('g', {class:'machine-edge ' + kind, 'data-edge':id}, $('machine-edges'));
+    svgEl('path', {d:path}, g);
+    svgEl('text', {x,y}, g, label);
+    edges.set(id, {g,from,to,label});
+  }
+  addEdge('create','未创建','Unconfigured','M480 37 L480 70','create()',535,55,'external');
+  addEdge('recreate','已销毁','Unconfigured','M1012 755 L1140 755 L1140 45 L560 45 L560 70','create() / 新对象',1050,35,'external');
+  addEdge('configure','Unconfigured','Configuring','M560 115 L675 180','configure()',650,132,'external');
+  addEdge('configure-SUCCESS','Configuring','Inactive','M690 240 L560 310','SUCCESS',660,290);
+  addEdge('configure-FAILURE','Configuring','Unconfigured','M760 180 L760 100 L570 100','FAILURE',695,90);
+  addEdge('activate','Inactive','Activating','M560 345 L675 420','activate()',650,370,'external');
+  addEdge('activate-SUCCESS','Activating','Active','M690 480 L560 550','SUCCESS',660,530);
+  addEdge('activate-FAILURE','Activating','Inactive','M760 420 L760 330 L570 330','FAILURE',695,320);
+  addEdge('cleanup','Inactive','CleaningUp','M400 315 L290 240','cleanup()',335,295,'external');
+  addEdge('cleanup-SUCCESS','CleaningUp','Unconfigured','M290 180 L400 115','SUCCESS',330,135);
+  addEdge('cleanup-FAILURE','CleaningUp','Inactive','M240 240 L240 350 L390 350','FAILURE',300,368);
+  addEdge('deactivate','Active','Deactivating','M400 555 L290 480','deactivate()',330,535,'external');
+  addEdge('deactivate-SUCCESS','Deactivating','Inactive','M290 420 L400 345','SUCCESS',330,385);
+  addEdge('deactivate-FAILURE','Deactivating','Active','M240 480 L240 590 L390 590','FAILURE',300,610);
+  addEdge('shutdown-Unconfigured','Unconfigured','ShuttingDown','M570 80 L1000 80 L1000 420','shutdown() [5]',930,68,'external');
+  addEdge('shutdown-Inactive','Inactive','ShuttingDown','M570 350 L920 350 L970 420','shutdown() [6]',865,340,'external');
+  addEdge('shutdown-Active','Active','ShuttingDown','M570 570 L1000 570 L1000 480','shutdown() [7]',875,560,'external');
+  addEdge('shutdown-SUCCESS','ShuttingDown','Finalized','M1030 480 L1030 650','SUCCESS',1070,615);
+  addEdge('shutdown-FAILURE','ShuttingDown','Finalized','M970 480 L970 650','FAILURE',930,615);
+  addEdge('destroy','Finalized','已销毁','M1000 710 L1000 741','destroy()',1060,730,'external');
+  addEdge('error-SUCCESS','ErrorProcessing','Unconfigured','M190 100 L390 100','on_error: SUCCESS',290,87);
+  addEdge('error-FAILURE','ErrorProcessing','Finalized','M75 130 L75 700 L910 700','on_error: FAILURE / ERROR',480,720);
+  // Error edges are subdued until executed, keeping the normal paths readable.
+  ['Configuring','CleaningUp','Activating','Deactivating','ShuttingDown'].forEach((name,index) => {
+    const [x,y] = graphNodes[name], lane = 150 + index * 18;
+    addEdge(name + '-ERROR', name, 'ErrorProcessing',
+      'M' + (x-75) + ' ' + (y+30) + ' L' + (x-100) + ' ' + (y+48) +
+      ' L' + lane + ' ' + (y+48) + ' L' + lane + ' 145 L100 130',
+      'ERROR', x-100, y+64, 'error');
+  });
+  Object.entries(graphNodes).forEach(([name,[x,y,detail]]) => {
+    const endpoint = name === '未创建' || name === '已销毁';
+    const transient = !endpoint && !Object.hasOwn(primaryIds,name);
+    const g = svgEl('g',{class:'machine-node' + (transient?' transient':''),'data-state':name},$('machine-nodes'));
+    if (endpoint) {
+      svgEl('circle',{cx:x,cy:y,r:13,fill:name==='已销毁'?'white':'black',stroke:'black','stroke-width':2},g);
+      if(name==='已销毁') svgEl('circle',{cx:x,cy:y,r:9,fill:'black'},g);
+      svgEl('text',{x:x-65,y:y+5},g,detail);
+    } else {
+      svgEl('rect',{x:x-90,y:y-30,width:180,height:60,rx:9},g);
+      svgEl('line',{x1:x-90,y1:y-4,x2:x+90,y2:y-4,stroke:'#172033'},g);
+      svgEl('text',{x,y:y-11},g,name);
+      svgEl('text',{x,y:y+17,class:'node-detail'},g,detail);
+    }
+    nodeElements.set(name,g);
+  });
+  function track(id, detail) {
+    const edge = edges.get(id);
+    latestEdge = id; visitedEdges.add(id);
+    trace.push(edge.label + ' → ' + edge.to);
+    eventText = detail;
+  }
+  function renderGraph() {
+    nodeElements.forEach((g,name) => g.classList.toggle('current',name===state));
+    edges.forEach(({g},id) => {
+      g.classList.toggle('visited',visitedEdges.has(id));
+      g.classList.toggle('latest',id===latestEdge);
+    });
+    $('machine-event').textContent = eventText;
+    $('machine-trace').textContent = '执行轨迹：' + trace.join(' → ');
+  }
+  ['未创建','Unconfigured','Inactive','Active','Finalized','已销毁',
+    'Configuring','CleaningUp','Activating','Deactivating','ShuttingDown','ErrorProcessing'].forEach(name => {
+    const el = document.createElement('span');
+    el.className = 'state-chip' + (name.endsWith('ing') || name === 'CleaningUp' ? ' transient' : '');
+    el.textContent = name; $('state-strip').append(el);
+  });
+  function log(message) {
+    $('sim-log').textContent += message + '\n';
+    $('sim-log').scrollTop = $('sim-log').scrollHeight;
+  }
+  function permitted(action) {
+    if (pending) return false;
+    if (action === 'create') return ['未创建','已销毁'].includes(state);
+    if (action === 'destroy') return state === 'Finalized';
+    if (action === 'shutdown') return ['Unconfigured','Inactive','Active'].includes(state);
+    return rules[action].from === state;
+  }
+  function render() {
+    renderGraph();
+    $('sim-status').textContent = '当前状态：' + state + (pending ? ' · 等待完成回调' : '');
+    [...$('state-strip').children].forEach(el => el.classList.toggle('current', el.textContent === state));
+    document.querySelectorAll('[data-action]').forEach(b => { b.disabled = !permitted(b.dataset.action); });
+    $('complete-callback').disabled = !pending;
+  }
+  function begin(action) {
+    if (!permitted(action)) return;
+    if (action === 'create' || action === 'destroy') {
+      track(action === 'create' && state === '已销毁' ? 'recreate' : action,
+        '对象所有者执行 ' + action + '，创建或释放节点对象。');
+      state = action === 'create' ? 'Unconfigured' : '已销毁';
+      log('对象所有者：' + action + ' → ' + state + '（无 change_state 请求）');
+    } else {
+      const origin = state;
+      const rule = action === 'shutdown' ? {from:origin, via:'ShuttingDown', to:'Finalized', id:primaryIds[origin] + 4} : rules[action];
+      pending = {...rule, action};
+      track(action === 'shutdown' ? 'shutdown-' + origin : action,
+        '外部事件：' + action + ' · transition.id = ' + rule.id + ' → 执行 on_' + action + '()');
+      $('example-action').value = action;
+      if (action === 'shutdown') $('shutdown-source').value = origin;
+      updateCode();
+      log('外部管理器 → ' + nodeName() + '/change_state：transition.id = ' + rule.id);
+      state = rule.via;
+      log(origin + ' → ' + state + '：节点执行 on_' + action + '()');
+    }
+    render();
+  }
+  ['create','configure','activate','deactivate','cleanup','shutdown','destroy'].forEach(action => {
+    const b = document.createElement('button');
+    b.textContent = action; b.dataset.action = action; b.onclick = () => begin(action); $('actions').append(b);
+  });
+  $('complete-callback').onclick = () => {
+    if (!pending) return;
+    if (state === 'ErrorProcessing') {
+      const result = $('error-result').value;
+      track(result === 'SUCCESS' ? 'error-SUCCESS' : 'error-FAILURE', '执行 on_error() → ' + result);
+      state = result === 'SUCCESS' ? 'Unconfigured' : 'Finalized';
+      log('on_error → ' + result + ' → ' + state + '；原 change_state 请求 success = false');
+      pending = null;
+    } else {
+      const result = $('callback-result').value;
+      log('on_' + pending.action + ' → ' + result);
+      if (result === 'ERROR') {
+        track(state + '-ERROR', '执行 on_' + pending.action + '() → ERROR，进入错误处理回调 on_error()');
+        state = 'ErrorProcessing';
+        log('进入 ErrorProcessing，执行 on_error()；再次点击“完成回调”');
+      } else {
+        track(pending.action + '-' + result, '执行 on_' + pending.action + '() → ' + result);
+        state = result === 'SUCCESS' || pending.action === 'shutdown' ? pending.to : pending.from;
+        log('→ ' + state + '；change_state 响应 success = ' + (result === 'SUCCESS'));
+        pending = null;
+      }
+    }
+    if (!pending) log('管理器通过 get_state 确认：' + state);
+    render();
+  };
+  $('reset-sim').onclick = () => {
+    latestEdge = ''; visitedEdges.clear(); trace = ['未创建']; eventText = '等待对象所有者执行 create。';
+    state = '未创建'; pending = null; $('sim-log').textContent = '';
+    log('已重置；点击 create 创建模拟节点。'); render();
+  };
+  function nodeName() { return $('node-name').value.trim(); }
+  function updateCode() {
+    const node = nodeName();
+    const valid = /^\/[A-Za-z_][A-Za-z0-9_]*(\/[A-Za-z_][A-Za-z0-9_]*)*$/.test(node);
+    $('copy-code').disabled = !valid;
+    if (!valid) {
+      $('example-info').textContent = '请输入完整 ROS 节点名，例如 /lc_talker 或 /robot/lc_talker。';
+      $('example-code').textContent = ''; return;
+    }
+    const action = $('example-action').value;
+    const origin = action === 'shutdown' ? $('shutdown-source').value : rules[action].from;
+    const id = action === 'shutdown' ? primaryIds[origin] + 4 : rules[action].id;
+    const target = action === 'shutdown' ? 'Finalized' : rules[action].to;
+    $('shutdown-source').disabled = action !== 'shutdown';
+    $('example-info').textContent = origin + ' → ' + action + '（ID ' + id + '）→ ' + target + '；仅在回调 SUCCESS 时表示转换成功。';
+    const constant = action === 'shutdown' ? 'TRANSITION_' + origin.toUpperCase() + '_SHUTDOWN' : 'TRANSITION_' + action.toUpperCase();
+    const examples = {
+      lifecycle: `# 查询当前状态与可用动作；确认当前为 ${origin}
+ros2 lifecycle get ${node}
+ros2 lifecycle list ${node}
+ros2 lifecycle set ${node} ${action}
+ros2 lifecycle get ${node}`,
+      service: `# 当前状态必须为 ${origin}；不要重复执行已成功的转换
+ros2 service call ${node}/get_state lifecycle_msgs/srv/GetState "{}"
+ros2 service call ${node}/get_available_transitions lifecycle_msgs/srv/GetAvailableTransitions "{}"
+ros2 service call ${node}/change_state lifecycle_msgs/srv/ChangeState "{transition: {id: ${id}}}"
+ros2 service call ${node}/get_state lifecycle_msgs/srv/GetState "{}"`,
+      cpp: `// lifecycle_client.cpp：独立管理器进程
+#include <chrono>
+#include <memory>
+#include <stdexcept>
+#include <rclcpp/rclcpp.hpp>
+#include <lifecycle_msgs/msg/transition.hpp>
+#include <lifecycle_msgs/srv/change_state.hpp>
+#include <lifecycle_msgs/srv/get_state.hpp>
+using namespace std::chrono_literals;
+
+template<class Service>
+typename Service::Response::SharedPtr call(
+    const rclcpp::Node::SharedPtr & node,
+    const typename rclcpp::Client<Service>::SharedPtr & client,
+    typename Service::Request::SharedPtr request) {
+  if (!client->wait_for_service(5s))
+    throw std::runtime_error("Service unavailable");
+  auto future = client->async_send_request(request);
+  if (rclcpp::spin_until_future_complete(node, future, 5s) !=
+      rclcpp::FutureReturnCode::SUCCESS)
+    throw std::runtime_error("Request timeout: query state before retry");
+  return future.get();
+}
+int main(int argc, char ** argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("lifecycle_external_manager");
+  using Get = lifecycle_msgs::srv::GetState;
+  using Change = lifecycle_msgs::srv::ChangeState;
+  auto get = node->create_client<Get>("${node}/get_state");
+  auto change = node->create_client<Change>("${node}/change_state");
+  int exit_code = 0;
+  try {
+    auto before = call<Get>(node, get, std::make_shared<Get::Request>());
+    if (before->current_state.id != ${primaryIds[origin]})
+      throw std::runtime_error("Expected ${origin}; no request sent");
+    auto request = std::make_shared<Change::Request>();
+    request->transition.id = lifecycle_msgs::msg::Transition::${constant};
+    auto result = call<Change>(node, change, request);
+    auto after = call<Get>(node, get, std::make_shared<Get::Request>());
+    RCLCPP_INFO(node->get_logger(), "success=%d; state=%s",
+      result->success, after->current_state.label.c_str());
+    if (!result->success || after->current_state.id != ${primaryIds[target]})
+      throw std::runtime_error("Transition did not reach expected result");
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(node->get_logger(), "%s", e.what());
+    exit_code = 1;
+  }
+  rclcpp::shutdown();
+  return exit_code;
+}`,
+      python: `# lifecycle_client.py：运行 python3 lifecycle_client.py
+import rclpy
+from lifecycle_msgs.msg import Transition
+from lifecycle_msgs.srv import ChangeState, GetState
+
+def call(node, client, request):
+    if not client.wait_for_service(timeout_sec=5.0):
+        raise RuntimeError("Service unavailable")
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future, timeout_sec=5.0)
+    if not future.done():
+        future.cancel()
+        raise RuntimeError("Request timeout: query state before retry")
+    return future.result()
+
+def main():
+    rclpy.init()
+    node = rclpy.create_node("lifecycle_external_manager")
+    try:
+        get = node.create_client(GetState, "${node}/get_state")
+        change = node.create_client(ChangeState, "${node}/change_state")
+        before = call(node, get, GetState.Request())
+        if before.current_state.id != ${primaryIds[origin]}:
+            raise RuntimeError("Expected ${origin}; no request sent")
+        request = ChangeState.Request()
+        request.transition.id = Transition.${constant}
+        result = call(node, change, request)
+        after = call(node, get, GetState.Request())
+        print(f"success={result.success}; state={after.current_state.label}")
+        if not result.success or after.current_state.id != ${primaryIds[target]}:
+            raise RuntimeError("Transition did not reach expected result")
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+if __name__ == "__main__":
+    main()`
+    };
+    highlightCode($('example-code'), codeMode === 'lifecycle' || codeMode === 'service' ? 'bash' : codeMode, examples[codeMode]);
+    $('code-note').textContent = codeMode === 'cpp' || codeMode === 'python'
+      ? '独立客户端包含服务等待、超时、状态前置检查及结果验证。超时后节点可能仍在转换，应查询状态再决定是否重试。'
+      : '先检查状态和合法转换，再执行请求。命令行中的查询结果需要人工确认。';
+  }
+  document.querySelectorAll('[data-code]').forEach(b => b.onclick = () => {
+    codeMode = b.dataset.code;
+    document.querySelectorAll('[data-code]').forEach(el => el.setAttribute('aria-pressed', String(el === b)));
+    updateCode();
+  });
+  ['node-name','example-action','shutdown-source'].forEach(id => $(id).addEventListener('input', updateCode));
+  $('copy-code').onclick = async () => {
+    try { await navigator.clipboard.writeText($('example-code').textContent); $('code-note').textContent = '代码已复制。'; }
+    catch { $('code-note').textContent = '浏览器不允许自动复制，请选中下方代码手动复制。'; }
+  };
+  log('模拟节点已创建：Unconfigured。选择 configure 开始。');
+  render(); updateCode();
+})();
+</script>
+</body></html>
