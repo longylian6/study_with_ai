@@ -62,7 +62,22 @@ git clone --recurse-submodules <本仓库URL>
 [submodule "navigation2/navigation2"]
 	path = navigation2/navigation2
 	url = https://github.com/ros-navigation/navigation2
-	branch = main
+```
+
+### 当前锁定的提交
+
+本仓库固定使用以下提交（记录在父仓库索引的 gitlink 中）：
+
+```text
+64d5227338a6a8fef50bbae47e704cc9957e2baf
+```
+
+`.gitmodules` 不再配置 `branch`，因此执行 `git submodule update`（不带 `--remote`）会稳定 checkout 到该提交，不会被上游 `main` 的新提交自动覆盖。
+
+如需手动切到该提交：
+
+```bash
+git -C navigation2/navigation2 checkout 64d5227338a6a8fef50bbae47e704cc9957e2baf
 ```
 
 如需换用其他发行版分支，例如 Humble：
@@ -71,6 +86,8 @@ git clone --recurse-submodules <本仓库URL>
 git submodule set-branch -b humble navigation2/navigation2
 git submodule update --remote navigation2/navigation2
 ```
+
+> 注意：`git submodule update --remote` 会拉取所配置分支的最新提交并覆盖上方锁定的提交，如无必要请勿使用。
 
 ## 常见问题
 
