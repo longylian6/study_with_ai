@@ -1,4 +1,3 @@
 [submodule "navigation2/navigation2"]
 	path = navigation2/navigation2
 	url = https://github.com/ros-navigation/navigation2
-	branch = main
