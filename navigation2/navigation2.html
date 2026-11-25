@@ -6,7 +6,7 @@
   <meta name="description" content="Navigation2 包分类与介绍：算法组、系统组及 Action 接口。">
   <title>Navigation2 · 架构与模块</title>
   <style>
-    :root { color-scheme: light; --ink:#182a37; --muted:#6b7d89; --line:#dfe7eb; --accent:#087d83; --soft:#e7f3f2; --sidebar:320px; }
+    :root { color-scheme: light; --ink:#182a37; --muted:#6b7d89; --line:#dfe7eb; --accent:#087d83; --soft:#e7f3f2; --sidebar:320px; --sticky-tabs-height:40px; }
     * { box-sizing:border-box; }
     body { margin:0; font:14px/1.65 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; color:var(--ink); background:#fff; }
     button { font:inherit; cursor:pointer; }
@@ -145,6 +145,7 @@
     .interface-section > h3 small { font-size:12px; color:var(--muted); font-weight:400; margin-left:6px; }
     .package-reference .interface-card { margin:7px 0; padding:9px 12px; }
     .interface-card > summary { overflow-wrap:anywhere; }
+    .package-reference .interface-card[open] > summary { position:sticky; top:var(--sticky-tabs-height); z-index:4; margin:-3px -6px 0; padding:3px 6px; border-bottom:1px solid var(--line); border-radius:4px 4px 0 0; background:#fff; box-shadow:0 4px 7px -7px #182a37; }
     .interface-card > summary span { margin-left:12px; font-size:12px; color:var(--muted); font-weight:400; }
     .interface-fields { margin:12px 0; font-size:13px; }
     .interface-fields dt { font-weight:600; margin-top:10px; }
@@ -254,6 +255,161 @@
     }
     @media(pointer:coarse) { .entry, .tree summary, .tools button, .sidebar-toggle { min-height:36px; } }
     @media(prefers-reduced-motion:reduce) { * { transition:none !important; } }
+    .sas-hero { display:flex; flex-wrap:wrap; align-items:center; gap:5px 12px; margin:12px 0; padding:14px 16px; border-left:4px solid var(--accent); border-radius:5px; background:linear-gradient(110deg,#edf8f7,#f7fafb); }
+    .sas-hero strong { font-size:15px; } .sas-hero span { color:var(--muted); } .sas-hero b { color:#07676b; }
+    .sas-layers, .sas-flow, .sas-snapshots { display:flex; align-items:stretch; gap:8px; margin:10px 0 16px; overflow-x:auto; padding-bottom:4px; }
+    .sas-layers > div, .sas-flow > div, .sas-snapshots > div { flex:1 0 150px; display:flex; flex-direction:column; gap:3px; justify-content:center; min-height:82px; padding:10px 12px; border:1px solid #cfe2e1; border-radius:7px; background:#f8fbfb; text-align:center; }
+    .sas-layers > div:nth-of-type(2) { border-color:#9fcfcd; background:#eaf7f6; }
+    .sas-layers i, .sas-flow i, .sas-snapshots i { align-self:center; flex:0 0 auto; color:var(--accent); font-style:normal; font-size:19px; }
+    .sas-layers small, .sas-snapshots small { color:var(--muted); } .sas-layers span, .sas-flow span { font-size:11px; color:var(--muted); }
+    .sas-flow > div { flex-basis:112px; min-height:65px; border-color:#dce6ec; background:#fff; }
+    .sas-flow > div:nth-of-type(4) { border-color:#80c6c4; background:#edf8f7; }
+    .sas-callbacks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin:10px 0 18px; }
+    .sas-callbacks article { display:flex; flex-direction:column; gap:5px; padding:11px 12px; border-top:3px solid var(--accent); border-radius:5px; background:#f5f9fa; }
+    .sas-callbacks article:nth-child(2) { border-color:#d97706; } .sas-callbacks article:nth-child(3) { border-color:#2563eb; }
+    .sas-callbacks small { color:var(--muted); }
+    .sas-snapshots > div { flex-basis:135px; align-items:center; min-height:105px; }
+    .sas-snapshots code { display:block; width:100%; padding:2px 5px; background:#edf3f5; }
+    .sas-loop { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:9px 0 14px; padding:12px; border:1px solid #cfe2e1; border-radius:6px; background:#f5faf9; }
+    .sas-loop i { color:var(--accent); font-style:normal; font-weight:700; }
+    .sas-api th:first-child { width:16%; } .sas-api th:last-child { width:35%; }
+    .sas-guide-section { margin:18px 0; padding:14px; border:1px solid var(--line); border-radius:7px; background:#fff; }
+    .sas-guide-section > h4 { margin:0 0 8px; color:#075f64; font-size:14px; }
+    .sas-sequence { margin:12px 0; padding:10px; border:1px solid #cfe2e1; border-radius:6px; background:#f8fbfb; overflow-x:auto; }
+    .sas-sequence-head, .sas-sequence > div { display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:10px; min-width:620px; padding:7px 9px; text-align:center; }
+    .sas-sequence-head { border-bottom:1px solid #bfd8d7; color:#075f64; }
+    .sas-sequence > div:not(.sas-sequence-head) { border-bottom:1px dashed #dce6e9; }
+    .sas-sequence em { color:#075f64; font-style:normal; } .sas-sequence span { color:#455c69; }
+    .sas-workflow { display:grid; grid-template-columns:minmax(190px,1fr); justify-items:center; gap:5px; margin:10px auto 14px; max-width:620px; }
+    .sas-workflow > b, .sas-workflow > div { width:100%; padding:9px 12px; border:1px solid #cfe2e1; border-radius:6px; background:#f5faf9; text-align:center; }
+    .sas-workflow > div { display:flex; justify-content:space-between; gap:12px; background:#fff; }
+    .sas-workflow > div span { color:#a15c05; font-weight:600; } .sas-workflow > i { color:var(--accent); font-style:normal; }
+    .sas-lifecycle { display:flex; align-items:stretch; gap:7px; margin:11px 0 15px; overflow-x:auto; }
+    .sas-lifecycle > div { flex:1 0 145px; padding:11px; border:1px solid #cfe2e1; border-radius:6px; background:#f5faf9; text-align:center; }
+    .sas-lifecycle > div span { display:block; margin-top:5px; color:var(--muted); font-size:11px; }
+    .sas-lifecycle > i { align-self:center; color:var(--accent); font-style:normal; font-size:18px; }
+    @media(max-width:680px) { .sas-callbacks { grid-template-columns:1fr; } .sas-hero { align-items:flex-start; flex-direction:column; } .sas-guide-section { padding:11px; } .sas-workflow > div { flex-direction:column; } }
+    .nw-card { margin:16px 0; padding:20px; border:1px solid #dce3ea; border-radius:10px; background:#fff; overflow-wrap:anywhere; }
+    .nw-card > h2 { margin:0 0 12px; color:#1769aa; font-size:20px; }
+    details.nw-key-section > summary { cursor:pointer; color:#1769aa; font-size:20px; font-weight:700; line-height:1.35; }
+    details.nw-key-section[open] > summary { margin-bottom:12px; }
+    details.nw-key-section > summary::marker { color:#1769aa; font-size:14px; }
+    .nw-key-group { margin:12px 0 18px; padding:10px 12px; border:1px solid #cbdbe7; border-radius:10px; background:#f7fafc; }
+    .nw-key-group > summary { cursor:pointer; color:#0f5f9f; font-size:18px; font-weight:700; line-height:1.4; }
+    .nw-key-group[open] > summary { margin-bottom:6px; }
+    .nw-key-group > summary::marker { color:#0f5f9f; }
+    .nw-callbacks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .nw-callback { min-width:0; padding:14px; border:1px solid #dce3ea; border-top:3px solid var(--nw-accent,#38bdf8); border-radius:9px; background:#fbfdff; }
+    .nw-callback h3 { margin:0; font:600 15px/1.5 ui-monospace,monospace; }
+    .nw-callback p { margin:8px 0; font-size:13px; }
+    .package-reference .nw-callback pre, .package-reference .nw-card details pre, .package-reference pre.sas-code { padding:12px 14px; border:0; background:#202020; color:#e5edf4; font:12px/1.6 ui-monospace,Consolas,monospace; }
+    .nw-callout { margin:14px 0; padding:10px 14px; border-left:3px solid #0284c7; background:#eff6ff; font-size:14px; }
+    .nw-callout.warning { border-color:#d97706; background:#fffbeb; }
+    .nw-table { margin:14px 0; overflow-x:auto; }
+    .nw-table table { width:100%; min-width:620px; border-collapse:collapse; font-size:13px; }
+    .nw-table th, .nw-table td { padding:9px 12px; border:1px solid #d7e1e8; text-align:left; vertical-align:top; }
+    .nw-table th { background:#eaf3fa; font-weight:650; }
+    .nw-figure { margin:16px 0; padding:16px; border:1px solid #334b70; border-radius:12px; background:radial-gradient(ellipse at top,#263b5f,#101827 85%); color:#dbeafe; }
+    .nw-figure figcaption { margin-bottom:10px; color:#bfdbfe; font-weight:600; }
+    .nw-diagram-scroll { overflow-x:auto; }
+    .nw-figure svg { display:block; width:100%; min-width:760px; height:auto; }
+    .nw-figure svg text { fill:#dbeafe; font:13px system-ui,sans-serif; }
+    .nw-figure svg .nw-small { fill:#a9bbd1; font-size:11px; }
+    .nw-figure svg .nw-title { fill:#7dd3fc; font-size:14px; font-weight:700; }
+    .nw-figure svg .nw-box { fill:#20334e; stroke:#526d91; }
+    .nw-figure svg .nw-life { stroke:#526d91; stroke-dasharray:5 6; }
+    .nw-figure svg .nw-arrow { fill:none; stroke:#7dd3fc; stroke-width:1.7; }
+    .nw-figure svg .nw-reply { fill:none; stroke:#c4b5fd; stroke-width:1.7; stroke-dasharray:6 4; }
+    .nw-figure svg .nw-green { fill:#6ee7b7; } .nw-figure svg .nw-yellow { fill:#fcd34d; }
+    .nw-figure > p { margin:8px 0 0; color:#bfccdf; font-size:12px; }
+    .nw-figure.nw-figure-compact { box-sizing:border-box; width:100%; max-width:920px; margin:10px auto; padding:12px; }
+    .nw-figure-compact svg { width:min(100%,760px); min-width:660px; margin-inline:auto; }
+    .nw-figure-compact svg text { font-size:15px; }
+    .nw-figure-compact svg .nw-small { font-size:13px; }
+    .nw-figure-compact svg .nw-title { font-size:16.5px; }
+    .nw-snapshots { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:14px 0; }
+    .nw-snapshot { padding:12px; border:1px solid #cadbea; border-radius:8px; background:#f2f7fc; font-size:13px; }
+    .nw-snapshot strong { display:block; margin-bottom:8px; color:#1769aa; }
+    .nw-snapshot code { display:block; margin:5px 0; }
+    .nw-step { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:14px 0; counter-reset:nw-step; }
+    .nw-step > div { padding:12px; border-radius:8px; background:#edf4fb; font-size:13px; counter-increment:nw-step; }
+    .nw-step > div::before { content:counter(nw-step); display:block; margin-bottom:6px; color:#1769aa; font-weight:bold; }
+    .nw-card details { margin:12px 0; } .nw-card summary { color:#1769aa; font-size:14px; }
+    .sas-example-intro { margin:18px 0 12px; padding:16px 18px; border:1px solid #cadbea; border-radius:9px; background:#f8fbfd; }
+    .sas-example-intro > h4 { margin:0 0 8px; color:#1769aa; font-size:16px; }
+    .sas-example-intro .learning-button { margin:5px 0; color:#075f64; border-color:#9fcfcd; background:#fff; }
+    @media(max-width:760px) { .nw-callbacks { grid-template-columns:1fr; } .nw-snapshots,.nw-step { grid-template-columns:1fr 1fr; } .nw-card { padding:13px; } }
+    @media(max-width:480px) { .nw-snapshots,.nw-step { grid-template-columns:1fr; } }
+    .sas-wire { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:64px; padding:10px; overflow:hidden; background:#eef7f7; border:1px solid var(--line); border-radius:6px; }
+    .sas-wire strong { min-width:0; overflow-wrap:anywhere; color:var(--accent); }
+    .sas-moving strong { animation:sas-send .65s ease-out; }
+    .sas-back.sas-moving strong { animation-name:sas-receive; }
+    @keyframes sas-send { from { transform:translateX(-45px); opacity:.2; } to { transform:translateX(0); opacity:1; } }
+    @keyframes sas-receive { from { transform:translateX(45px); opacity:.2; } to { transform:translateX(0); opacity:1; } }
+    #sas-simulation .ros-action-controls { margin:10px 0; }
+    #sas-simulation select { max-width:100%; min-width:0; font:inherit; }
+    #sas-simulation label { max-width:100%; flex-wrap:wrap; }
+    .sas-sim-title h4 { margin:8px 0 2px; color:#1769aa; font-size:18px; }
+    .sas-sim-title p { margin:2px 0 8px; color:var(--muted); font-size:12px; }
+    .sas-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:8px 0 12px; padding:9px 11px; border:1px solid #d4e0e9; border-radius:9px; background:#fff; }
+    .sas-toolbar label { display:flex; align-items:center; gap:5px; }
+    .sas-toolbar select, .sas-toolbar button, .sas-panel input, .sas-panel select, .sas-panel button, .sas-button-grid button { min-height:32px; padding:5px 9px; border:1px solid #bfd1df; border-radius:6px; background:#fff; color:var(--ink); font:inherit; }
+    .sas-toolbar button:hover, .sas-panel button:hover:not(:disabled), .sas-button-grid button:hover:not(:disabled) { border-color:#2b72d6; background:#eff6ff; }
+    .sas-toolbar button:disabled, .sas-panel button:disabled, .sas-button-grid button:disabled { opacity:.42; cursor:not-allowed; }
+    #sas-clock { padding:4px 9px; border-radius:99px; background:#e5f3ff; color:#1769aa; font-variant-numeric:tabular-nums; }
+    #sas-guide { flex-basis:100%; margin:0; padding:4px 8px; border-left:2px solid #1687d9; background:#eaf4fc; color:#455c69; font-size:11px; }
+    .sas-workspace { display:grid; grid-template-columns:230px minmax(390px,1fr) 290px; gap:12px; align-items:start; }
+    .sas-panel { min-width:0; padding:12px; border:1px solid #d4e0e9; border-top:4px solid #2f6df6; border-radius:10px; background:#fff; }
+    .sas-panel.sas-server { border-top-color:#d9480f; }
+    .sas-panel > h4, .sas-inside > h4, .sas-wireboard > h4 { margin:0 0 8px; color:#1769aa; font-size:16px; }
+    .sas-panel label { display:block; margin:8px 0 4px; font-size:11px; }
+    .sas-panel .sas-auto-feedback { display:flex; align-items:flex-start; gap:6px; margin:9px 0 5px; line-height:1.4; }
+    .sas-panel .sas-auto-feedback input { width:auto; min-height:0; margin:2px 0 0; padding:0; accent-color:#d9480f; }
+    .sas-panel > input, .sas-panel > select, .sas-panel > button { width:100%; margin-bottom:5px; }
+    .sas-panel h5 { margin:13px 0 6px; font-size:12px; }
+    .sas-panel details { padding:7px; font-size:11px; }
+    .sas-panel details p { margin:5px 0; }
+    .sas-statusline { min-height:39px; margin-bottom:8px; padding:8px; border-radius:6px; background:#eaf4fc; color:#24445e; font-size:12px; }
+    .sas-center { display:grid; gap:12px; min-width:0; }
+    .sas-inside, .sas-wireboard { min-width:0; padding:12px; border:1px solid #273a56; border-radius:10px; background:#101d31; color:#dce9f7; }
+    .sas-inside > h4, .sas-wireboard > h4 { color:#8bd5ff; }
+    .sas-flags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; color:#9fd9ff; font:11px ui-monospace,Consolas,monospace; }
+    .sas-flags span { padding:3px 6px; border:1px solid #526b8d; border-radius:5px; }
+    .sas-flags span.on { border-color:#20c997; color:#6ee7b7; }
+    .sas-slots { display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:6px; }
+    .sas-slots > div { min-height:80px; padding:8px; border:1px solid #526b8d; border-radius:7px; background:#1b2d47; }
+    .sas-slots strong, .sas-slots span { display:block; overflow-wrap:anywhere; }
+    .sas-slots strong { color:#83cfff; font:11px ui-monospace,monospace; }
+    .sas-slots span { margin-top:5px; font-size:11px; }
+    .sas-inside > p, .sas-inside > small { margin:7px 0 0; color:#a9c2da; font-size:10px; }
+    .sas-last-packet { min-height:24px; margin-bottom:5px; color:#7dd3fc; text-align:center; font:11px ui-monospace,monospace; }
+    .sas-channels { display:grid; gap:6px; }
+    .sas-channels > div { --channel:#38bdf8; display:grid; grid-template-columns:90px minmax(130px,1fr) 100px; gap:8px; align-items:center; opacity:.7; }
+    .sas-channels > div:nth-child(2) { --channel:#34d399; } .sas-channels > div:nth-child(3) { --channel:#fb7185; } .sas-channels > div:nth-child(4) { --channel:#fbbf24; } .sas-channels > div:nth-child(5) { --channel:#c4b5fd; }
+    .sas-channels > div.active { opacity:1; }
+    .sas-channels b { padding:5px; border:1px solid #526b8d; border-radius:6px; background:#1b2d47; text-align:center; font-size:9px; }
+    .sas-channels b small { display:block; color:var(--channel); }
+    .sas-channels i { display:grid; gap:2px; color:#8aa0b8; font:8px ui-monospace,monospace; font-style:normal; }
+    .sas-channels i span { position:relative; display:block; width:100%; height:18px; padding-left:4px; }
+    .sas-channels i span::before { content:""; position:absolute; left:0; right:0; bottom:3px; border-top:1px dashed #64748b; }
+    .sas-channels i span::after { content:"▶"; position:absolute; right:-3px; bottom:-3px; color:var(--channel); font-size:9px; }
+    .sas-channels i span:nth-child(2)::after, .sas-channels > div[data-sas-channel="feedback"] i span::after, .sas-channels > div[data-sas-channel="status"] i span::after { content:"◀"; right:auto; left:-3px; }
+    .sas-channel-packet { position:absolute; z-index:2; top:10px; left:0; max-width:120px; padding:2px 7px; border-radius:99px; background:var(--channel); color:#08111f; opacity:0; font:bold 8px/14px ui-monospace,monospace; text-decoration:none; white-space:nowrap; box-shadow:0 0 12px color-mix(in srgb,var(--channel) 65%,transparent); transform:translateY(-50%); animation:sasChannelForward .9s linear forwards; }
+    .sas-channel-packet.reverse { animation-name:sasChannelReverse; }
+    @keyframes sasChannelForward { 0% { left:0; opacity:0; transform:translate(0,-50%); } 8%,92% { opacity:1; } 100% { left:100%; opacity:0; transform:translate(-100%,-50%); } }
+    @keyframes sasChannelReverse { 0% { left:100%; opacity:0; transform:translate(-100%,-50%); } 8%,92% { opacity:1; } 100% { left:0; opacity:0; transform:translate(0,-50%); } }
+    .sas-wireboard > p { margin:7px 0 0; color:#8fa8c1; font-size:9px; }
+    .sas-button-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+    .sas-button-grid button { min-width:0; padding:5px; font-size:10px; overflow-wrap:anywhere; }
+    .sas-record-box { margin-top:12px !important; background:#fff; }
+    .sas-record-box > summary { color:#1769aa !important; font-weight:650; }
+    .sas-record-box > h4 { color:#1769aa; font-size:16px; }
+    .sas-table-wrap { overflow-x:auto; }
+    .sas-record-box table { min-width:900px; }
+    @media(max-width:1180px) { .sas-workspace { grid-template-columns:210px minmax(360px,1fr); } .sas-server { grid-column:1 / -1; } .sas-server .sas-button-grid { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:820px) { .sas-workspace { grid-template-columns:1fr; } .sas-server { grid-column:auto; } .sas-client { order:1; } .sas-center { order:3; } .sas-server { order:2; } }
+    @media(max-width:520px) { .sas-slots { grid-template-columns:1fr; } .sas-server .sas-button-grid, .sas-button-grid { grid-template-columns:1fr; } .sas-channels > div { grid-template-columns:76px minmax(100px,1fr) 82px; } }
+    @media(prefers-reduced-motion:reduce) { .sas-moving strong { animation:none; } .sas-channel-packet { animation-duration:.01ms !important; } }
     .ros-action-sim { margin-top:8px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#f8fbfc; }
     .ros-action-controls { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
     .ros-action-controls label { display:flex; align-items:center; gap:5px; }
@@ -1840,7 +1996,24 @@ goal.order = 7;
 SendGoalOptions options;
 options.feedback_callback = on_feedback;
 options.result_callback = on_result;
-client_-&gt;async_send_goal(goal, options);</code></pre></section></div></details><h4>Fibonacci Action 仿真</h4><div class="ros-action-sim"><div class="ros-action-controls"><label>order <input id="fib-order" type="number" min="2" max="20" value="7"></label><button type="button" id="fib-send">发送 Goal</button><button type="button" id="fib-next" disabled>下一次 Feedback</button><button type="button" id="fib-run" disabled>自动运行</button><button type="button" id="fib-cancel" disabled>取消</button><button type="button" id="fib-reset">重置</button></div><div class="ros-action-state"><span>状态：<strong id="fib-status">IDLE</strong></span><span>Goal：<code id="fib-goal">—</code></span><span>序列：<code id="fib-sequence">—</code></span></div><ol id="fib-log" class="ros-action-log" aria-live="polite"><li>设置 order 后发送 Goal，观察 3 个 Service 和 2 个 Topic 如何协作。</li></ol></div></details></section><section id="ros-common-module" role="tabpanel" aria-labelledby="ros-common-module-tab" tabindex="0" hidden><h2>Nav2 节点共用的 ROS 工具箱</h2><p>nav2_ros_common 把 ROS 2 节点、通信和执行机制包装为统一的 Nav2 接口。规划器、控制器、行为服务器及其插件可以复用这些接口，将主要代码用于导航功能。</p><p><strong>仓库内部直接依赖 2 个：</strong><a href="#nav2_common">nav2_common</a> 提供构建规则；<a href="#nav2_msgs">nav2_msgs</a> 提供消息类型。</p><h3>文件分类</h3><table class="concept-table"><thead><tr><th>模块</th><th>文件</th></tr></thead><tbody><tr><td>Topic 与 QoS</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/publisher.hpp" target="_blank" rel="noopener noreferrer">publisher.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/subscription.hpp" target="_blank" rel="noopener noreferrer">subscription.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/qos_profiles.hpp" target="_blank" rel="noopener noreferrer">qos_profiles.hpp</a></td></tr><tr><td>线程、时钟与工具</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></td></tr><tr><td>TF 封装</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/tf2_factories.hpp" target="_blank" rel="noopener noreferrer">tf2_factories.hpp</a></td></tr><tr><td>消息校验</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/validate_messages.hpp" target="_blank" rel="noopener noreferrer">validate_messages.hpp</a></td></tr><tr><td>Service 与 Action</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_client.hpp" target="_blank" rel="noopener noreferrer">service_client.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_server.hpp" target="_blank" rel="noopener noreferrer">service_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/simple_action_server.hpp" target="_blank" rel="noopener noreferrer">simple_action_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/action_client.hpp" target="_blank" rel="noopener noreferrer">action_client.hpp</a></td></tr><tr><td>节点与工厂</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/lifecycle_node.hpp" target="_blank" rel="noopener noreferrer">lifecycle_node.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/interface_factories.hpp" target="_blank" rel="noopener noreferrer">interface_factories.hpp</a></td></tr></tbody></table><p>阅读顺序：先看 QoS、类型别名和运行工具，再看 Service / Action 封装，最后看 interface_factories 与 lifecycle_node。TF 和消息校验可作为独立分支学习。</p></section><section id="ros-common-topology" role="tabpanel" aria-labelledby="ros-common-topology-tab" tabindex="0" hidden><h2>文件拓扑分层</h2><p>根据实际 #include 生成；箭头为使用方 → 依赖方。默认显示 14 个公共头文件，可加入 6 个测试源码。外部 ROS、标准库及构建文件不混入此图。</p><p>基础文件在上，组合封装在下。层级 = 1 + 最深依赖层级；无包内依赖为第 0 层。连接保留直接依赖，但移除已有间接路径覆盖的冗余边；点击可向上跨层高亮所有依赖。</p><div><label><input type="checkbox" id="ros-topology-tests"> 包含测试源码</label> <button type="button" id="ros-topology-fit">适应画布</button> <button type="button" id="ros-topology-clear">清除选择</button></div><p>滚轮缩放 · 拖动平移 · <span style="color:#0f766e">绿色：选中</span> · <span style="color:#2563eb">蓝色：依赖</span> · <span style="color:#d97706">橙色：被依赖</span></p><canvas id="ros-topology-canvas" style="display:block;width:100%;height:560px;border:1px solid #dce6ec;border-radius:8px;touch-action:none" aria-label="文件topology关系图"></canvas><p id="ros-topology-selection" aria-live="polite"></p><label>选择文件 <select id="ros-topology-select"><option value="">未选择</option></select></label> <button type="button" id="ros-topology-source">查看选中文件源码</button></section><section id="ros-common-node" role="tabpanel" aria-labelledby="ros-common-node-tab" tabindex="0" hidden><h2>节点与工厂</h2><p>统一创建 Nav2 节点和 ROS 接口，是上层导航服务器接入这些公共能力的入口。</p><details class="interface-card" data-interface="include/lifecycle_node.hpp"><summary><code>lifecycle_node.hpp</code><span>Nav2 生命周期节点基类</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::LifecycleNode 继承 rclcpp_lifecycle::LifecycleNode，提供参数声明、通信工厂、Bond 心跳连接、自动启动与关闭清理。具体导航算法仍由派生节点实现。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/interface_factories.hpp" target="_blank" rel="noopener noreferrer">interface_factories.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/lifecycle_node.hpp" target="_blank" rel="noopener noreferrer">lifecycle_node.hpp ↗</a></p></details><details class="interface-card" data-interface="include/interface_factories.hpp"><summary><code>interface_factories.hpp</code><span>ROS 通信接口统一工厂</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::interfaces 中的 create_* 函数统一创建发布器、订阅器、Service、Action 和定时器，并集中配置 QoS、通信选项与 introspection。LifecycleNode 将这些函数包装为成员接口。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/qos_profiles.hpp" target="_blank" rel="noopener noreferrer">qos_profiles.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_client.hpp" target="_blank" rel="noopener noreferrer">service_client.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_server.hpp" target="_blank" rel="noopener noreferrer">service_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/simple_action_server.hpp" target="_blank" rel="noopener noreferrer">simple_action_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/publisher.hpp" target="_blank" rel="noopener noreferrer">publisher.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/subscription.hpp" target="_blank" rel="noopener noreferrer">subscription.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/action_client.hpp" target="_blank" rel="noopener noreferrer">action_client.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/tf2_factories.hpp" target="_blank" rel="noopener noreferrer">tf2_factories.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/interface_factories.hpp" target="_blank" rel="noopener noreferrer">interface_factories.hpp ↗</a></p></details></section><section id="ros-common-topics" role="tabpanel" aria-labelledby="ros-common-topics-tab" tabindex="0" hidden><h2>Topic 与 QoS</h2><p>统一发布订阅类型与通信策略，减少各模块重复配置。</p><details class="interface-card" data-interface="include/publisher.hpp"><summary><code>publisher.hpp</code><span>生命周期发布器类型</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::Publisher 是 rclcpp_lifecycle::LifecyclePublisher 的类型别名，支持生命周期发布器的激活与停用。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/publisher.hpp" target="_blank" rel="noopener noreferrer">publisher.hpp ↗</a></p></details><details class="interface-card" data-interface="include/subscription.hpp"><summary><code>subscription.hpp</code><span>订阅器公共类型</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::Subscription 是 rclcpp::Subscription 的类型别名；此别名本身没有增加生命周期订阅控制。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/subscription.hpp" target="_blank" rel="noopener noreferrer">subscription.hpp ↗</a></p></details><details class="interface-card" data-interface="include/qos_profiles.hpp"><summary><code>qos_profiles.hpp</code><span>Nav2 统一 QoS 配置</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd><table class="concept-table" aria-label="nav2_ros_common QoS 配置"><thead><tr><th scope="col">QoS 类</th><th scope="col">Reliability</th><th scope="col">Durability</th><th scope="col">History (Depth)</th></tr></thead><tbody><tr><td><code>StandardTopicQoS</code></td><td><code>Reliable</code></td><td><code>Volatile</code></td><td><code>Keep Last (10)</code></td></tr><tr><td><code>LatchedPublisherQoS</code></td><td><code>Reliable</code></td><td><code>Transient Local</code></td><td><code>Keep Last (1)</code></td></tr><tr><td><code>LatchedSubscriptionQoS</code></td><td><code>Reliable</code></td><td><code>Transient Local</code></td><td><code>Keep Last (10)</code></td></tr><tr><td><code>SensorDataQoS</code></td><td><code>Best Effort</code></td><td><code>Volatile</code></td><td><code>Keep Last (10)</code></td></tr></tbody></table><p class="concept-example">表中的 Depth 是构造函数默认值，创建对象时可以传入其他深度。</p></dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/qos_profiles.hpp" target="_blank" rel="noopener noreferrer">qos_profiles.hpp ↗</a></p></details></section><section id="ros-common-services" role="tabpanel" aria-labelledby="ros-common-services-tab" tabindex="0" hidden><h2>Service 与 Action</h2><p>为请求响应和长时间任务提供公共封装。包本身不会启动具体服务或导航 Action。</p><details class="interface-card" data-interface="include/service_client.hpp"><summary><code>service_client.hpp</code><span>Service 客户端封装</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>ServiceClient 封装服务等待和请求调用，可选择内部 executor，处理等待与超时，减少重复的客户端代码。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_client.hpp" target="_blank" rel="noopener noreferrer">service_client.hpp ↗</a></p></details><details class="interface-card" data-interface="include/service_server.hpp"><summary><code>service_server.hpp</code><span>Service 服务端封装</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>ServiceServer 封装服务创建及 introspection 配置；回调接收请求头、请求和响应。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_server.hpp" target="_blank" rel="noopener noreferrer">service_server.hpp ↗</a></p></details><details class="interface-card" data-interface="include/simple_action_server.hpp"><summary><code>simple_action_server.hpp</code><span>Action 目标执行管理</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>SimpleActionServer 管理当前目标、待处理目标、抢占请求、取消、反馈和结果，并提供执行线程及激活/停用接口。算法回调需要主动检查取消、抢占和运行状态。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/simple_action_server.hpp" target="_blank" rel="noopener noreferrer">simple_action_server.hpp ↗</a></p></details><details class="interface-card" data-interface="include/action_client.hpp"><summary><code>action_client.hpp</code><span>Action 客户端公共类型</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>ActionClient 是 rclcpp_action::Client 的类型别名；额外的创建配置由 interface_factories 提供。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/action_client.hpp" target="_blank" rel="noopener noreferrer">action_client.hpp ↗</a></p></details></section><section id="ros-common-runtime" role="tabpanel" aria-labelledby="ros-common-runtime-tab" tabindex="0" hidden><h2>线程、时钟与工具</h2><p>为节点运行提供通用基础能力。</p><details class="interface-card" data-interface="include/node_thread.hpp"><summary><code>node_thread.hpp</code><span>后台执行器线程</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>NodeThread 管理 executor 的后台 spin 线程，并在销毁时取消 executor、等待线程退出。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp ↗</a></p></details><details class="interface-card" data-interface="include/rate.hpp"><summary><code>rate.hpp</code><span>适配仿真时间的循环频率</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::Rate 根据 use_sim_time 选择 ROS 仿真时钟或 steady 单调时钟，后者避免系统时间校正影响循环周期；同样的时钟选择也用于定时器工厂。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp ↗</a></p></details><details class="interface-card" data-interface="include/node_utils.hpp"><summary><code>node_utils.hpp</code><span>节点、参数与插件工具</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>包含节点命名和命名空间处理、参数声明与读取、插件类型参数查询、软实时优先级、introspection 模式及包资源路径工具。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp ↗</a></p></details></section><section id="ros-common-tf" role="tabpanel" aria-labelledby="ros-common-tf-tab" tabindex="0" hidden><h2>TF 封装</h2><p>集中创建坐标变换相关对象，供节点和插件复用。</p><details class="interface-card" data-interface="include/tf2_factories.hpp"><summary><code>tf2_factories.hpp</code><span>TF 对象创建工厂</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>提供 TransformBuffer、监听器、动态/静态广播器和 MessageFilter 的别名或薄封装，以及相应工厂函数。MessageFilter 用于等待消息所需的坐标变换就绪。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/tf2_factories.hpp" target="_blank" rel="noopener noreferrer">tf2_factories.hpp ↗</a></p></details></section><section id="ros-common-validation" role="tabpanel" aria-labelledby="ros-common-validation-tab" tabindex="0" hidden><h2>消息校验</h2><p>在使用消息之前检查数据是否满足对应类型的基本约束；返回校验结果，不修复数据。</p><details class="interface-card" data-interface="include/validate_messages.hpp"><summary><code>validate_messages.hpp</code><span>ROS 消息有效性检查</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>validateMsg 重载检查数值、时间、Header、点、四元数、位姿、协方差、栅格地图、地图更新、Range 和 Nav2 Costmap 等。根据类型检查有限值、尺寸与数据长度等；validateMsgInfValid 允许有限值和正无穷，但拒绝 NaN 与负无穷；Range.range 使用此校验，以支持传感器无回波的正无穷值。此文件直接使用 nav2_msgs 的 Costmap、CostmapMetaData 与 CostmapUpdate；CostmapUpdate 校验 Header、非零尺寸及 data 长度是否等于 size_x × size_y。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/validate_messages.hpp" target="_blank" rel="noopener noreferrer">validate_messages.hpp ↗</a></p></details></section></div>
+client_-&gt;async_send_goal(goal, options);</code></pre></section></div></details><h4>Fibonacci Action 仿真</h4><div class="ros-action-sim"><div class="ros-action-controls"><label>order <input id="fib-order" type="number" min="2" max="20" value="7"></label><button type="button" id="fib-send">发送 Goal</button><button type="button" id="fib-next" disabled>下一次 Feedback</button><button type="button" id="fib-run" disabled>自动运行</button><button type="button" id="fib-cancel" disabled>取消</button><button type="button" id="fib-reset">重置</button></div><div class="ros-action-state"><span>状态：<strong id="fib-status">IDLE</strong></span><span>Goal：<code id="fib-goal">—</code></span><span>序列：<code id="fib-sequence">—</code></span></div><ol id="fib-log" class="ros-action-log" aria-live="polite"><li>设置 order 后发送 Goal，观察 3 个 Service 和 2 个 Topic 如何协作。</li></ol></div></details></section><section id="ros-common-module" role="tabpanel" aria-labelledby="ros-common-module-tab" tabindex="0" hidden><h2>Nav2 节点共用的 ROS 工具箱</h2><p>nav2_ros_common 把 ROS 2 节点、通信和执行机制包装为统一的 Nav2 接口。规划器、控制器、行为服务器及其插件可以复用这些接口，将主要代码用于导航功能。</p><p><strong>仓库内部直接依赖 2 个：</strong><a href="#nav2_common">nav2_common</a> 提供构建规则；<a href="#nav2_msgs">nav2_msgs</a> 提供消息类型。</p><h3>文件分类</h3><table class="concept-table"><thead><tr><th>模块</th><th>文件</th></tr></thead><tbody><tr><td>Topic 与 QoS</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/publisher.hpp" target="_blank" rel="noopener noreferrer">publisher.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/subscription.hpp" target="_blank" rel="noopener noreferrer">subscription.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/qos_profiles.hpp" target="_blank" rel="noopener noreferrer">qos_profiles.hpp</a></td></tr><tr><td>线程、时钟与工具</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></td></tr><tr><td>TF 封装</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/tf2_factories.hpp" target="_blank" rel="noopener noreferrer">tf2_factories.hpp</a></td></tr><tr><td>消息校验</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/validate_messages.hpp" target="_blank" rel="noopener noreferrer">validate_messages.hpp</a></td></tr><tr><td>Service 与 Action</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_client.hpp" target="_blank" rel="noopener noreferrer">service_client.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_server.hpp" target="_blank" rel="noopener noreferrer">service_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/simple_action_server.hpp" target="_blank" rel="noopener noreferrer">simple_action_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/action_client.hpp" target="_blank" rel="noopener noreferrer">action_client.hpp</a></td></tr><tr><td>节点与工厂</td><td><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/lifecycle_node.hpp" target="_blank" rel="noopener noreferrer">lifecycle_node.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/interface_factories.hpp" target="_blank" rel="noopener noreferrer">interface_factories.hpp</a></td></tr></tbody></table><p>阅读顺序：先看 QoS、类型别名和运行工具，再看 Service / Action 封装，最后看 interface_factories 与 lifecycle_node。TF 和消息校验可作为独立分支学习。</p></section><section id="ros-common-topology" role="tabpanel" aria-labelledby="ros-common-topology-tab" tabindex="0" hidden><h2>文件拓扑分层</h2><p>根据实际 #include 生成；箭头为使用方 → 依赖方。默认显示 14 个公共头文件，可加入 6 个测试源码。外部 ROS、标准库及构建文件不混入此图。</p><p>基础文件在上，组合封装在下。层级 = 1 + 最深依赖层级；无包内依赖为第 0 层。连接保留直接依赖，但移除已有间接路径覆盖的冗余边；点击可向上跨层高亮所有依赖。</p><div><label><input type="checkbox" id="ros-topology-tests"> 包含测试源码</label> <button type="button" id="ros-topology-fit">适应画布</button> <button type="button" id="ros-topology-clear">清除选择</button></div><p>滚轮缩放 · 拖动平移 · <span style="color:#0f766e">绿色：选中</span> · <span style="color:#2563eb">蓝色：依赖</span> · <span style="color:#d97706">橙色：被依赖</span></p><canvas id="ros-topology-canvas" style="display:block;width:100%;height:560px;border:1px solid #dce6ec;border-radius:8px;touch-action:none" aria-label="文件topology关系图"></canvas><p id="ros-topology-selection" aria-live="polite"></p><label>选择文件 <select id="ros-topology-select"><option value="">未选择</option></select></label> <button type="button" id="ros-topology-source">查看选中文件源码</button></section><section id="ros-common-node" role="tabpanel" aria-labelledby="ros-common-node-tab" tabindex="0" hidden><h2>节点与工厂</h2><p>统一创建 Nav2 节点和 ROS 接口，是上层导航服务器接入这些公共能力的入口。</p><details class="interface-card" data-interface="include/lifecycle_node.hpp"><summary><code>lifecycle_node.hpp</code><span>Nav2 生命周期节点基类</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::LifecycleNode 继承 rclcpp_lifecycle::LifecycleNode，提供参数声明、通信工厂、Bond 心跳连接、自动启动与关闭清理。具体导航算法仍由派生节点实现。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/interface_factories.hpp" target="_blank" rel="noopener noreferrer">interface_factories.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/lifecycle_node.hpp" target="_blank" rel="noopener noreferrer">lifecycle_node.hpp ↗</a></p></details><details class="interface-card" data-interface="include/interface_factories.hpp"><summary><code>interface_factories.hpp</code><span>ROS 通信接口统一工厂</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::interfaces 中的 create_* 函数统一创建发布器、订阅器、Service、Action 和定时器，并集中配置 QoS、通信选项与 introspection。LifecycleNode 将这些函数包装为成员接口。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/qos_profiles.hpp" target="_blank" rel="noopener noreferrer">qos_profiles.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_client.hpp" target="_blank" rel="noopener noreferrer">service_client.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_server.hpp" target="_blank" rel="noopener noreferrer">service_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/simple_action_server.hpp" target="_blank" rel="noopener noreferrer">simple_action_server.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/publisher.hpp" target="_blank" rel="noopener noreferrer">publisher.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/subscription.hpp" target="_blank" rel="noopener noreferrer">subscription.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/action_client.hpp" target="_blank" rel="noopener noreferrer">action_client.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/tf2_factories.hpp" target="_blank" rel="noopener noreferrer">tf2_factories.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/interface_factories.hpp" target="_blank" rel="noopener noreferrer">interface_factories.hpp ↗</a></p></details></section><section id="ros-common-topics" role="tabpanel" aria-labelledby="ros-common-topics-tab" tabindex="0" hidden><h2>Topic 与 QoS</h2><p>统一发布订阅类型与通信策略，减少各模块重复配置。</p><details class="interface-card" data-interface="include/publisher.hpp"><summary><code>publisher.hpp</code><span>生命周期发布器类型</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::Publisher 是 rclcpp_lifecycle::LifecyclePublisher 的类型别名，支持生命周期发布器的激活与停用。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/publisher.hpp" target="_blank" rel="noopener noreferrer">publisher.hpp ↗</a></p></details><details class="interface-card" data-interface="include/subscription.hpp"><summary><code>subscription.hpp</code><span>订阅器公共类型</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::Subscription 是 rclcpp::Subscription 的类型别名；此别名本身没有增加生命周期订阅控制。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/subscription.hpp" target="_blank" rel="noopener noreferrer">subscription.hpp ↗</a></p></details><details class="interface-card" data-interface="include/qos_profiles.hpp"><summary><code>qos_profiles.hpp</code><span>Nav2 统一 QoS 配置</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd><table class="concept-table" aria-label="nav2_ros_common QoS 配置"><thead><tr><th scope="col">QoS 类</th><th scope="col">Reliability</th><th scope="col">Durability</th><th scope="col">History (Depth)</th></tr></thead><tbody><tr><td><code>StandardTopicQoS</code></td><td><code>Reliable</code></td><td><code>Volatile</code></td><td><code>Keep Last (10)</code></td></tr><tr><td><code>LatchedPublisherQoS</code></td><td><code>Reliable</code></td><td><code>Transient Local</code></td><td><code>Keep Last (1)</code></td></tr><tr><td><code>LatchedSubscriptionQoS</code></td><td><code>Reliable</code></td><td><code>Transient Local</code></td><td><code>Keep Last (10)</code></td></tr><tr><td><code>SensorDataQoS</code></td><td><code>Best Effort</code></td><td><code>Volatile</code></td><td><code>Keep Last (10)</code></td></tr></tbody></table><p class="concept-example">表中的 Depth 是构造函数默认值，创建对象时可以传入其他深度。</p></dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/qos_profiles.hpp" target="_blank" rel="noopener noreferrer">qos_profiles.hpp ↗</a></p></details></section><section id="ros-common-services" role="tabpanel" aria-labelledby="ros-common-services-tab" tabindex="0" hidden><h2>Service 与 Action</h2><p>为请求响应和长时间任务提供公共封装。包本身不会启动具体服务或导航 Action。</p><details class="interface-card" data-interface="include/service_client.hpp"><summary><code>service_client.hpp</code><span>Service 客户端封装</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>ServiceClient 封装服务等待和请求调用，可选择内部 executor，处理等待与超时，减少重复的客户端代码。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_client.hpp" target="_blank" rel="noopener noreferrer">service_client.hpp ↗</a></p></details><details class="interface-card" data-interface="include/service_server.hpp"><summary><code>service_server.hpp</code><span>Service 服务端封装</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>ServiceServer 封装服务创建及 introspection 配置；回调接收请求头、请求和响应。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></dd></dl><details><summary>简单例程</summary><pre><code>#include "nav2_ros_common/service_server.hpp"
+#include "example_interfaces/srv/add_two_ints.hpp"
+
+using AddTwoInts = example_interfaces::srv::AddTwoInts;
+
+// 回调签名：请求头、请求、响应
+void add(const std::shared_ptr&lt;rmw_request_id_t&gt; header,
+         const std::shared_ptr&lt;AddTwoInts::Request&gt; request,
+         std::shared_ptr&lt;AddTwoInts::Response&gt; response)
+{
+  response-&gt;sum = request-&gt;a + request-&gt;b;
+}
+
+// 在节点内创建服务端
+auto server = std::make_shared&lt;nav2::ServiceServer&lt;AddTwoInts&gt;&gt;(
+  "add_two_ints",   // 服务名
+  node,             // rclcpp::Node / LifecycleNode 的 shared_ptr
+  &amp;add);           // 回调（也可用 std::bind 绑定成员函数）</code></pre><p class="concept-example">回调会依次收到请求头、请求与响应三个参数；节点内的 <code>create_service</code> 工厂底层即构造 <code>nav2::ServiceServer</code> 并自动设置 introspection 模式。</p></details><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/service_server.hpp" target="_blank" rel="noopener noreferrer">service_server.hpp ↗</a></p></details><details class="interface-card" data-interface="include/simple_action_server.hpp"><summary><code>simple_action_server.hpp</code><span>Action 目标执行管理</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>SimpleActionServer 管理当前目标、待处理目标、抢占请求、取消、反馈和结果，并提供执行线程及激活/停用接口。算法回调需要主动检查取消、抢占和运行状态。</dd><dt>包内直接依赖</dt><dd><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp</a>、<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp</a></dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/simple_action_server.hpp" target="_blank" rel="noopener noreferrer">simple_action_server.hpp ↗</a></p></details><details class="interface-card" data-interface="include/action_client.hpp"><summary><code>action_client.hpp</code><span>Action 客户端公共类型</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>ActionClient 是 rclcpp_action::Client 的类型别名；额外的创建配置由 interface_factories 提供。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/action_client.hpp" target="_blank" rel="noopener noreferrer">action_client.hpp ↗</a></p></details></section><section id="ros-common-runtime" role="tabpanel" aria-labelledby="ros-common-runtime-tab" tabindex="0" hidden><h2>线程、时钟与工具</h2><p>为节点运行提供通用基础能力。</p><details class="interface-card" data-interface="include/node_thread.hpp"><summary><code>node_thread.hpp</code><span>后台执行器线程</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>NodeThread 管理 executor 的后台 spin 线程，并在销毁时取消 executor、等待线程退出。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_thread.hpp" target="_blank" rel="noopener noreferrer">node_thread.hpp ↗</a></p></details><details class="interface-card" data-interface="include/rate.hpp"><summary><code>rate.hpp</code><span>适配仿真时间的循环频率</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>nav2::Rate 根据 use_sim_time 选择 ROS 仿真时钟或 steady 单调时钟，后者避免系统时间校正影响循环周期；同样的时钟选择也用于定时器工厂。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/rate.hpp" target="_blank" rel="noopener noreferrer">rate.hpp ↗</a></p></details><details class="interface-card" data-interface="include/node_utils.hpp"><summary><code>node_utils.hpp</code><span>节点、参数与插件工具</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>包含节点命名和命名空间处理、参数声明与读取、插件类型参数查询、软实时优先级、introspection 模式及包资源路径工具。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/node_utils.hpp" target="_blank" rel="noopener noreferrer">node_utils.hpp ↗</a></p></details></section><section id="ros-common-tf" role="tabpanel" aria-labelledby="ros-common-tf-tab" tabindex="0" hidden><h2>TF 封装</h2><p>集中创建坐标变换相关对象，供节点和插件复用。</p><details class="interface-card" data-interface="include/tf2_factories.hpp"><summary><code>tf2_factories.hpp</code><span>TF 对象创建工厂</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>提供 TransformBuffer、监听器、动态/静态广播器和 MessageFilter 的别名或薄封装，以及相应工厂函数。MessageFilter 用于等待消息所需的坐标变换就绪。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/tf2_factories.hpp" target="_blank" rel="noopener noreferrer">tf2_factories.hpp ↗</a></p></details></section><section id="ros-common-validation" role="tabpanel" aria-labelledby="ros-common-validation-tab" tabindex="0" hidden><h2>消息校验</h2><p>在使用消息之前检查数据是否满足对应类型的基本约束；返回校验结果，不修复数据。</p><details class="interface-card" data-interface="include/validate_messages.hpp"><summary><code>validate_messages.hpp</code><span>ROS 消息有效性检查</span></summary><dl class="interface-fields"><dt>主要功能</dt><dd>validateMsg 重载检查数值、时间、Header、点、四元数、位姿、协方差、栅格地图、地图更新、Range 和 Nav2 Costmap 等。根据类型检查有限值、尺寸与数据长度等；validateMsgInfValid 允许有限值和正无穷，但拒绝 NaN 与负无穷；Range.range 使用此校验，以支持传感器无回波的正无穷值。此文件直接使用 nav2_msgs 的 Costmap、CostmapMetaData 与 CostmapUpdate；CostmapUpdate 校验 Header、非零尺寸及 data 长度是否等于 size_x × size_y。</dd><dt>包内直接依赖</dt><dd>无；仅依赖外部头文件。</dd></dl><p class="concept-source"><a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_ros_common/include/nav2_ros_common/validate_messages.hpp" target="_blank" rel="noopener noreferrer">validate_messages.hpp ↗</a></p></details></section></div>
           <div class="concept-overview package-reference" id="nav2-voxel-grid-introduction" hidden>
             <p><strong>nav2_voxel_grid 是 Nav2 中紧凑、快速的三维体素栅格基础库。</strong>它把空间切成一个个小立方体（voxel），记录每个体素是空闲、未知还是被障碍物占用。主要使用者是 <a href="#nav2_costmap_2d">nav2_costmap_2d</a> 中的 VoxelLayer。</p>
             <p class="concept-source">分类位置：算法组 → nav2::LifecycleNode → 不带 Action Server → nav2_costmap_2d 的体素层基础库。nav2_voxel_grid 本身不是 LifecycleNode，也不是插件或 Action Server；插件类 VoxelLayer 位于 nav2_costmap_2d。<a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_voxel_grid/README.md" target="_blank" rel="noopener noreferrer">README ↗</a> · <a href="https://github.com/ros-navigation/navigation2/blob/64d5227338a6a8fef50bbae47e704cc9957e2baf/nav2_voxel_grid/package.xml" target="_blank" rel="noopener noreferrer">package.xml ↗</a></p>
@@ -3198,6 +3371,613 @@ LocalPlanEvaluation results</code></pre></div>
       arrange();
     }
     createRosFileCanvas('topology');
+
+    function createServiceBasics() {
+      const card = document.createElement('details');
+      card.className = 'interface-card'; card.id = 'ros2-service-card';
+      card.innerHTML = `<summary><code>Service</code><span>一次请求、一次响应的调用</span></summary>
+        <p>Client 发送 Request，Server 在回调中处理并返回 Response。适合加法计算、查询或短时间设置操作；需要持续反馈、取消或长时间执行的任务可使用下方的 Action。</p>
+        <h4>官方示例：example_interfaces/srv/AddTwoInts</h4>
+        <pre><code>int64 a
+int64 b
+---
+int64 sum</code></pre>
+        <p><code>---</code> 上方是请求，下方是响应。服务名为 <code>/add_two_ints</code>；例如请求 <code>a=2, b=3</code>，响应为 <code>sum=5</code>。双方使用相同的服务名和接口类型。</p>
+        <details><summary>查看简化 C++ Server / Client 代码</summary><p>两段代码分别作为独立可执行程序，依赖 rclcpp 和 example_interfaces。Client 的 spin 驱动响应处理；等待结果应放在主流程中，避免阻塞互斥回调。</p><div class="concept-grid"><section><h4>Server</h4><pre><code data-service-code="server"></code></pre></section><section><h4>Client</h4><pre><code data-service-code="client"></code></pre></section></div></details>
+        <details><summary>AddTwoInts Service 仿真</summary><div class="ros-action-sim">
+          <div class="ros-action-controls"><label>a <input id="srv-a" type="number" min="-1000000" max="1000000" step="1" value="2"></label><label>b <input id="srv-b" type="number" min="-1000000" max="1000000" step="1" value="3"></label><button type="button" id="srv-send">发送 Request</button><button type="button" id="srv-next" disabled>下一步</button><button type="button" id="srv-auto">自动演示</button><button type="button" id="srv-reset">重置</button></div>
+          <div class="fib-flow"><div class="fib-flow-head"><strong>Service · Client ⇄ Server</strong><code>/add_two_ints</code></div><div class="fib-flow-scroll" tabindex="0" role="region" aria-label="Service 请求响应动画，窄屏可横向滚动"><div class="fib-flow-channels"><div class="fib-flow-row"><div class="fib-flow-node">Client<b>Request</b></div><div class="fib-flow-track"><span class="fib-flow-label">REQUEST →</span><span class="fib-flow-packet" id="srv-request-packet" aria-hidden="true">a, b</span></div><div class="fib-flow-node">Server<b>等待回调</b></div></div><div class="fib-flow-row" data-channel="result"><div class="fib-flow-node">Client<b>Response</b></div><div class="fib-flow-track reverse"><span class="fib-flow-label">← RESPONSE</span><span class="fib-flow-packet" id="srv-response-packet" aria-hidden="true">sum</span></div><div class="fib-flow-node">Server<b>a + b</b></div></div></div></div></div>
+          <p id="srv-state" role="status">就绪：设置 a、b 后发送请求。</p><ol id="srv-log" class="ros-action-log" aria-label="Service 通信日志"></ol>
+          <p class="concept-example">离线教学演示：发送请求 → Server 执行回调 → 返回响应 → Client 取得结果。每步由按钮推进，自动模式按固定间隔推进；动画时长不代表真实网络延迟。为方便观察，一次只演示一个请求，输入限制为 ±1000000 的整数。</p>
+        </div></details>
+        <p class="concept-source">参考：<a href="https://docs.ros.org/en/rolling/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Cpp-Service-And-Client.html" target="_blank" rel="noopener noreferrer">ROS 2 官方 C++ Service / Client 教程</a> · <a href="https://github.com/ros2/ros2_documentation/blob/rolling/source/ROS-Framework/client-libraries/Working-with-Client-Libraries/Writing-A-Simple-Cpp-Service-And-Client.rst" target="_blank" rel="noopener noreferrer">官方教程源码</a></p>`;
+      byId('ros2-action-card').before(card);
+      const intro = byId('ros-common-basics').querySelector(':scope > p');
+      intro.textContent = intro.textContent.replace('QoS 和 Action', 'QoS、Service 和 Action');
+      card.querySelector('[data-service-code="server"]').textContent = `#include <memory>
+#include "rclcpp/rclcpp.hpp"
+#include "example_interfaces/srv/add_two_ints.hpp"
+using Add = example_interfaces::srv::AddTwoInts;
+
+int main(int argc, char **argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("add_server");
+  auto service = node->create_service<Add>(
+    "add_two_ints",
+    [](std::shared_ptr<Add::Request> req,
+       std::shared_ptr<Add::Response> res) {
+      res->sum = req->a + req->b;
+    });
+  rclcpp::spin(node);  // 等待并执行请求回调
+  rclcpp::shutdown();
+}`;
+      card.querySelector('[data-service-code="client"]').textContent = `#include <chrono>
+#include <iostream>
+#include <memory>
+#include "rclcpp/rclcpp.hpp"
+#include "example_interfaces/srv/add_two_ints.hpp"
+using Add = example_interfaces::srv::AddTwoInts;
+
+int main(int argc, char **argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("add_client");
+  auto client = node->create_client<Add>("add_two_ints");
+  if (!client->wait_for_service(std::chrono::seconds(5))) {
+    std::cerr << "Service 不可用\\n";
+    rclcpp::shutdown();
+    return 1;
+  }
+  auto req = std::make_shared<Add::Request>();
+  req->a = 2; req->b = 3;
+  auto future = client->async_send_request(req);
+  auto state = rclcpp::spin_until_future_complete(
+    node, future, std::chrono::seconds(5));
+  if (state == rclcpp::FutureReturnCode::SUCCESS) {
+    std::cout << "sum=" << future.get()->sum << std::endl;
+  } else {
+    client->remove_pending_request(future);
+    std::cerr << "响应超时或等待被中断\\n";
+  }
+  rclcpp::shutdown();
+}`;
+      const get = id => byId('srv-' + id);
+      let stage = 0, timer = null, a = 0, b = 0;
+      function stop() { clearInterval(timer); timer = null; }
+      function render() {
+        const busy = stage > 0 && stage < 4;
+        ['a', 'b', 'send'].forEach(id => { get(id).disabled = busy; });
+        get('next').disabled = !busy || timer !== null;
+        get('auto').disabled = timer !== null;
+      }
+      function log(text) { get('state').textContent = text; const li = document.createElement('li'); li.textContent = text; get('log').append(li); }
+      function packet(id, text) { const el = get(id + '-packet'); el.textContent = text; el.classList.remove('run'); void el.offsetWidth; el.classList.add('run'); }
+      function send() {
+        if (stage > 0 && stage < 4) return false;
+        if (!get('a').reportValidity() || !get('b').reportValidity() || get('a').value === '' || get('b').value === '') { get('state').textContent = '请输入范围内的两个整数。'; return false; }
+        a = Number(get('a').value); b = Number(get('b').value); stage = 1;
+        get('log').replaceChildren();
+        card.querySelectorAll('.fib-flow-packet').forEach(el => el.classList.remove('run'));
+        log('Client 发送 Request：a=' + a + '，b=' + b); packet('request', a + ' + ' + b); render(); return true;
+      }
+      function next() {
+        if (stage === 1) { stage = 2; log('Server 执行回调：sum = ' + a + ' + ' + b + ' = ' + (a + b)); }
+        else if (stage === 2) { stage = 3; log('Server 返回 Response：sum=' + (a + b)); packet('response', 'sum=' + (a + b)); }
+        else if (stage === 3) { stage = 4; stop(); log('Client 收到 Response，Future 就绪：sum=' + (a + b)); }
+        render();
+      }
+      get('send').addEventListener('click', send);
+      get('next').addEventListener('click', next);
+      get('auto').addEventListener('click', () => { if (timer !== null) return; if ((stage === 0 || stage === 4) && !send()) return; timer = setInterval(next, 1200); render(); });
+      get('reset').addEventListener('click', () => { stop(); stage = 0; get('log').replaceChildren(); get('state').textContent = '就绪：设置 a、b 后发送请求。'; card.querySelectorAll('.fib-flow-packet').forEach(el => el.classList.remove('run')); render(); });
+      render();
+    }
+    createServiceBasics();
+
+    function expandServiceClientIntroduction() {
+      const card = byId('ros-common-services').querySelector('[data-interface="include/service_client.hpp"]');
+      const content = document.createElement('div');
+      content.innerHTML = `<h4>在原生 ROS 2 Service Client 上封装了什么？</h4>
+        <p><code>nav2::ServiceClient&lt;ServiceT&gt;</code> 内部仍使用 <code>rclcpp::Client</code>，服务端和 .srv 接口不需要改。主要把“等服务 → 发请求 → 驱动响应处理 → 取结果”封装成一次 <code>invoke()</code> 调用。</p>
+        <ul>
+          <li><strong>少写等待代码：</strong>invoke 自动等待服务上线，默认最多约 10 秒，每秒检查并记录等待日志；响应等待时间可另行指定，默认无限等待。</li>
+          <li><strong>失败时清理请求：</strong>invoke 等待响应超时或被中断时，清理客户端尚未完成的请求记录。返回响应指针的重载随后抛出异常；这不等于取消服务端正在执行的操作。</li>
+          <li><strong>可选内部 Executor：</strong>构造时传 true，会创建独立互斥回调组和单线程 Executor，供 invoke / spin_until_complete 驱动客户端响应；默认 false。不自动创建后台线程。</li>
+          <li><strong>统一配置：</strong>使用 ServicesQoS，并按节点的 introspection_mode 参数配置服务事件观测。另提供 async_call 的 Future 和回调两种异步写法。</li>
+        </ul>
+        <h4>选哪种调用方式？</h4>
+        <ul>
+          <li><code>invoke(req, response_timeout, service_timeout)</code>：阻塞并返回响应指针；分别限制响应等待和服务上线等待，失败时抛异常。适合当前逻辑必须立即使用结果的短操作。</li>
+          <li><code>invoke(req, response, service_timeout)</code>：通过输出参数取得响应，以 bool 表示响应是否成功完成；等待服务上线失败仍会抛异常。此重载没有响应超时参数，会一直等待响应。</li>
+          <li><code>async_call(req)</code>：立即返回 <code>SharedFuture</code>，可交给现有事件循环稍后查询、等待或组合；调用前可先用 <code>wait_for_service()</code> 确认服务可用。</li>
+          <li><code>async_call(req, callback)</code>：立即返回，请求完成后执行回调；适合事件驱动逻辑。它不会自动等待服务上线，也不包含 invoke 的超时与未完成请求清理。</li>
+          <li><code>wait_for_service(timeout)</code>：只等待并检查服务是否可用，不发送请求；返回 false 后可选择重试、降级或退出。</li>
+          <li><code>spin_until_complete(future, timeout)</code>：驱动 Executor，直到指定 Future 完成或超时；内部 Executor 模式下驱动专用 Executor，否则尝试 spin 当前节点。</li>
+          <li><code>getServiceName()</code>：取得当前客户端连接的服务名，适合日志、诊断和状态展示。</li>
+          <li><code>stop()</code>：取消内部 Executor 正在进行的 spin；只应在构造时启用了内部 Executor 的客户端上使用。它不会取消服务端已经开始处理的请求。</li>
+        </ul>
+        <p class="concept-example"><strong>Executor 注意：</strong>节点已经由外部 Executor spin 时，不要用默认 false 模式调用 invoke，它会尝试再次 spin 该节点。需要在回调中同步调用时可用 true 模式，但服务端仍须有可运行的 Executor / 回调组，不能依赖被当前调用阻塞的回调。内部 Executor 也不应被多个线程同时 spin。</p>
+        <p class="concept-example"><strong>计时注意：</strong>等待服务上线的超时检查使用节点时钟，并以 1 秒为轮询间隔；仿真时钟暂停时，这个超时不保证按现实时间到期。</p>`;
+      card.querySelector('.concept-source').before(content);
+    }
+    expandServiceClientIntroduction();
+
+    function expandServiceServerIntroduction() {
+      const card = byId('ros-common-services').querySelector('[data-interface="include/service_server.hpp"]');
+      const content = document.createElement('div');
+      content.innerHTML = `<h4>在原生 ROS 2 Service Server 上封装了什么？</h4>
+        <p><code>nav2::ServiceServer&lt;ServiceT&gt;</code> 是对 <code>rclcpp::Service</code> 的轻量封装：仍使用原来的 .srv 类型和同步服务回调，但统一了 Nav2 创建服务时的 QoS、回调签名和 introspection 配置。</p>
+        <ul>
+          <li><strong>兼容不同节点类型：</strong>构造函数通过节点接口创建服务，可接收提供相应接口的普通节点或 LifecycleNode，不要求业务代码直接调用某一种节点的 <code>create_service()</code>。</li>
+          <li><strong>统一通信配置：</strong>固定使用 <code>rclcpp::ServicesQoS()</code>，并读取节点的 <code>introspection_mode</code> 参数配置服务事件观测。</li>
+          <li><strong>保留完整请求信息：</strong>回调同时取得请求头、请求和响应；一般业务只读取 request 并填写 response，需要追踪请求来源或序列号时再使用 request_header。</li>
+          <li><strong>支持指定回调组：</strong>可把服务放进已有 CallbackGroup，明确它与订阅、定时器及其他服务能否并发执行；不传时由 ROS 2 使用节点的默认回调组。</li>
+        </ul>
+        <h4>构造参数怎么选？</h4>
+        <ul>
+          <li><code>service_name</code>：客户端连接的服务名，遵循节点命名空间和 ROS 2 名称解析规则。</li>
+          <li><code>node</code>：提供 base、services、parameters 接口和时钟的节点对象。</li>
+          <li><code>callback</code>：签名为 <code>(request_header, request, response)</code>；在回调内校验请求并直接填写 response，无需手动发送响应。</li>
+          <li><code>callback_group</code>：可选。使用 <code>MutuallyExclusive</code> 可避免同组回调并发访问共享状态；使用 <code>Reentrant</code> 前应确保回调及其数据是线程安全的。</li>
+        </ul>
+        <p class="concept-example"><strong>与 ServiceClient 配合：</strong>服务类型和名称保持一致即可；两者都采用 <code>ServicesQoS</code> 和相同的 introspection 配置方式，不需要 Nav2 专用的 .srv 定义。</p>`;
+      card.querySelector('.concept-source').before(content);
+    }
+    expandServiceServerIntroduction();
+
+    function expandSimpleActionServerIntroduction() {
+      const card = byId('ros-common-services').querySelector('[data-interface="include/simple_action_server.hpp"]');
+      const content = document.createElement('div');
+      content.innerHTML = `<details class="nw-key-group" open>
+        <summary>关键封装介绍</summary>
+        <details class="nw-card nw-key-section" id="nw-callbacks" open>
+          <summary>01 · 三个回调：决策、取消许可、安排执行</summary>
+          <p>构造函数将这三个函数绑定到 <code>rclcpp_action::create_server()</code>。下面摘录分支逻辑，省略签名、日志和锁；真实实现使用 <code>update_mutex_</code> 串行保护这些槽位更新。</p>
+          <div class="nw-callbacks">
+            <article class="nw-callback"><h3>handle_goal()</h3><p>收到 SendGoal 请求时调用。先检查 Server 是否激活，再调用可选的 goal_received_callback 校验 Goal。</p>
+<pre class="language-cpp">if (!server_active_) {
+  return GoalResponse::REJECT;
+}
+if (goal_received_callback_ && !goal_received_callback_(goal)) {\n  return GoalResponse::REJECT;\n}\nreturn GoalResponse::ACCEPT_AND_EXECUTE;</pre>
+              <p><strong>目的：</strong>由 activate / deactivate 控制任务入口。拒绝时 response.accepted=false，不再调用 handle_accepted。</p>
+            </article>
+            <article class="nw-callback" style="--nw-accent:#fb7185"><h3>handle_cancel(handle)</h3><p>底层筛选出可尝试取消的 Goal 后调用，检查传入 Handle 是否仍 active。</p>
+<pre class="language-cpp">if (!handle-&gt;is_active()) {
+  return CancelResponse::REJECT;
+}
+return CancelResponse::ACCEPT;</pre>
+              <p><strong>目的：</strong>允许取消。ACCEPT 后由底层推进到 CANCELING；这里不停止线程，也不调用 canceled(result)。</p>
+            </article>
+            <article class="nw-callback" style="--nw-accent:#34d399"><h3>handle_accepted(handle)</h3><p>Goal 接受后自动调用，安排当前或等待槽位，并尽快返回 Executor。</p>
+<pre class="language-cpp">if (is_active(current_handle_) || is_running()) {
+  // 已占用的 pending 先 terminate 再替换
+  pending_handle_ = handle;
+  preempt_requested_ = true;
+} else {
+  current_handle_ = handle;
+  // std::async(std::launch::async, ...)
+  execution_future_ = start_work();
+}</pre>
+              <p><strong>目的：</strong>空闲时启动后台工作，忙时保留最新 pending。<code>start_work()</code> 是图解简写，并非实际 API。</p>
+            </article>
+          </div>
+          <div class="nw-table"><table><thead><tr><th>内部返回 / 分支</th><th>客户端可见</th><th>业务执行</th></tr></thead><tbody>
+            <tr><td>handle_goal → REJECT</td><td>SendGoal.accepted=false，空 GoalHandle</td><td>不执行 accepted / execute</td></tr>
+            <tr><td>handle_goal → ACCEPT_AND_EXECUTE</td><td>SendGoal.accepted=true</td><td>accepted 再决定 current 或 pending；接受不保证马上处理该任务</td></tr>
+            <tr><td>handle_cancel → ACCEPT</td><td>成功推进取消的 Goal 列入 goals_canceling；单 Goal 常见 ERROR_NONE</td><td>等待 execute 检查并收尾</td></tr>
+            <tr><td>handle_cancel → REJECT</td><td>单个活动 Goal 被拒绝时通常 ERROR_REJECTED、空 goals_canceling</td><td>原任务继续；未知或已终止 Goal 可由底层直接返回其它错误</td></tr>
+          </tbody></table></div>
+        </details>
+
+        <details class="nw-card nw-key-section" id="nw-goal-sequence" open>
+          <summary>02 · 一个 Goal 如何从请求进入业务线程</summary>
+          <figure class="nw-figure nw-figure-compact">
+            <figcaption>正常执行时序 · Server 已 activate，当前无任务</figcaption>
+            <div class="nw-diagram-scroll"><svg viewBox="0 0 900 480" role="img" aria-labelledby="nw-seq-title">
+              <title id="nw-seq-title">Client 发送 Goal，封装接受并启动 work，Client 请求结果，后台发布 Feedback 并返回成功</title>
+              <defs><marker id="nw-seq-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker><marker id="nw-seq-reply" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#c4b5fd"/></marker></defs>
+              <rect class="nw-box" x="40" y="12" width="160" height="42" rx="8"/><text x="120" y="39" text-anchor="middle" class="nw-title">Action Client</text>
+              <rect class="nw-box" x="285" y="12" width="260" height="42" rx="8"/><text x="415" y="39" text-anchor="middle" class="nw-title">Executor / Action Server</text>
+              <rect class="nw-box" x="650" y="12" width="210" height="42" rx="8"/><text x="755" y="39" text-anchor="middle" class="nw-title">std::async / work()</text>
+              <path class="nw-life" d="M120 54V446M415 54V446M755 54V446"/>
+              <path class="nw-arrow" marker-end="url(#nw-seq-tip)" d="M120 92H415"/><text x="140" y="80">① SendGoal.Request</text>
+              <rect class="nw-box" x="300" y="107" width="230" height="42" rx="6"/><text x="415" y="124" text-anchor="middle">handle_goal() → 接受</text><text x="415" y="140" text-anchor="middle" class="nw-small">active=true → ACCEPT_AND_EXECUTE</text>
+              <path class="nw-reply" marker-end="url(#nw-seq-reply)" d="M415 175H120"/><text x="140" y="165">② Response：accepted=true</text>
+              <path class="nw-arrow" marker-end="url(#nw-seq-tip)" d="M415 208H755"/><text x="444" y="196">③ handle_accepted()：current ← G1</text>
+              <rect class="nw-box" x="674" y="221" width="165" height="35" rx="6"/><text x="756" y="244" text-anchor="middle">execute_callback_()</text>
+              <path class="nw-arrow" marker-end="url(#nw-seq-tip)" d="M120 278H415"/><text x="135" y="266">④ GetResult.Request（可提前等待）</text>
+              <text x="432" y="286" class="nw-small">未结束：保存请求</text>
+              <path class="nw-reply" marker-end="url(#nw-seq-reply)" d="M755 324H120"/><text x="430" y="313" class="nw-green">publish_feedback() → Feedback Topic</text>
+              <path class="nw-arrow" marker-end="url(#nw-seq-tip)" d="M755 365H415"/><text x="474" y="354" class="nw-yellow">succeeded_current(result)</text>
+              <path class="nw-reply" marker-end="url(#nw-seq-reply)" d="M415 401H120"/><text x="135" y="390">⑤ GetResult.Response：SUCCEEDED</text>
+              <text x="755" y="423" text-anchor="middle">execute return → work() 收尾</text>
+              <text x="755" y="442" text-anchor="middle" class="nw-small">无 pending → future ready</text>
+            </svg></div>
+            <p>这是逻辑顺序示意：线程与网络并行，Feedback 无需等待 GetResult.Request；Status Topic 由底层跟随 Goal 状态发布。客户端看到 Response 的时刻不等于服务端执行回调的时刻。</p>
+          </figure>
+          <p><code>get_result</code> 可能先到、也可能后到：未完成时等待；完成后在结果保留期内返回缓存。封装的成功 / 终止方法通过底层 GoalHandle 提供结果。</p>
+        </details>
+
+        <details class="nw-card nw-key-section" id="nw-scheduling" open>
+          <summary>03 · 两个槽位：current 正在处理，pending 保留最新请求</summary>
+          <p>一个正在执行的 Goal 不会因新请求到来就被立刻中断。新 Goal 先进入 pending，设置 <code>preempt_requested_=true</code>；业务在合适的检查点决定是否调用 <code>accept_pending_goal()</code>。</p>
+          <div class="nw-snapshots">
+            <div class="nw-snapshot"><strong>① G1 到来</strong><code>current = G1</code><code>pending = ∅</code>启动工作线程</div>
+            <div class="nw-snapshot"><strong>② G2 到来</strong><code>current = G1</code><code>pending = G2</code>G1 继续运行</div>
+            <div class="nw-snapshot"><strong>③ G3 到来</strong><code>current = G1</code><code>pending = G3</code>terminate(G2)：通常 ABORTED</div>
+            <div class="nw-snapshot"><strong>④ 应用接受抢占</strong><code>current = G3</code><code>pending = ∅</code>旧 G1 ABORTED，清除抢占标志</div>
+          </div>
+          <details><summary>展开 accept_pending_goal() 的关键实现</summary>
+<pre class="language-cpp">// 摘录：省略锁、日志与无效 pending 检查
+if (is_active(current_handle_) &amp;&amp; current_handle_ != pending_handle_) {
+  current_handle_-&gt;abort(empty_result());
+}
+current_handle_ = pending_handle_;
+pending_handle_.reset();
+preempt_requested_ = false;
+return current_handle_-&gt;get_goal();</pre></details>
+          <p class="nw-callout">pending 已经经过 <code>ACCEPT_AND_EXECUTE</code>，ROS Goal 状态可以是 EXECUTING；“等待”指应用槽位，不是 ROS 的 ACCEPTED/DEFER 状态。抢占旧 current 调用的是 <code>abort()</code>，不会向它发送 Cancel 请求。</p>
+          <div class="nw-table"><table><thead><tr><th>函数 / 条件</th><th>实际作用</th><th>设计目的</th></tr></thead><tbody>
+            <tr><td>is_preempt_requested()</td><td>只读标志，不自动换任务</td><td>业务自行选择安全切换点</td></tr>
+            <tr><td>accept_pending_goal()</td><td>终止 active 旧 current、接管 pending、清标志，返回新 Goal</td><td>同一业务回调可继续处理新任务，无需新建线程</td></tr>
+            <tr><td>terminate_pending_goal()</td><td>仅终止 pending 并清标志</td><td>应用可拒绝这次业务切换，保留 current</td></tr>
+            <tr><td>current active 或 is_running()</td><td>新 Goal 进入 pending</td><td>即使 current 已返回结果，仍等旧业务回调退出，避免两个工作线程重叠</td></tr>
+          </tbody></table></div>
+          <p class="note">pending 只有一个槽位，不是 FIFO 队列。覆盖 pending 时使用 <code>terminate()</code>：若它已 CANCELING 则 CANCELED，否则 ABORTED。</p>
+        </details>
+
+        <details class="nw-card nw-key-section" id="nw-worker" open>
+          <summary>04 · work()：回调返回后，才进入封装的收尾检查</summary>
+          <figure class="nw-figure nw-figure-compact">
+            <figcaption>工作线程流程 · 业务回调本身不被 work() 循环打断</figcaption>
+            <div class="nw-diagram-scroll"><svg viewBox="0 0 900 500" role="img" aria-labelledby="nw-work-title">
+              <title id="nw-work-title">work 调用 execute，异常时终止全部；正常返回后检查 stop 和 current，再接续 pending 或退出</title>
+              <defs><marker id="nw-work-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker></defs>
+              <rect class="nw-box" x="190" y="15" width="390" height="42" rx="8"/><text x="385" y="41" text-anchor="middle">while：ROS 正常、未 stop、current active</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M385 57V87"/>
+              <rect class="nw-box" x="235" y="87" width="300" height="46" rx="8"/><text x="385" y="115" text-anchor="middle">调用 execute_callback_()</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M535 110H656"/><text x="550" y="98" class="nw-small">抛出异常</text>
+              <rect class="nw-box" x="656" y="77" width="222" height="68" rx="8"/><text x="767" y="99" text-anchor="middle">terminate_all()</text><text x="767" y="118" text-anchor="middle">completion_callback_()</text><text x="767" y="136" text-anchor="middle" class="nw-yellow">退出 work()</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M385 133V170"/><text x="399" y="156" class="nw-small">正常 return</text>
+              <path class="nw-box" d="M385 170L530 207L385 244L240 207Z"/><text x="385" y="212" text-anchor="middle">stop_execution_？</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M530 207H767V145"/><text x="572" y="196" class="nw-small">是 → 同样收尾退出</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M385 244V280"/><text x="399" y="267" class="nw-small">否</text>
+              <rect class="nw-box" x="175" y="280" width="420" height="62" rx="8"/><text x="385" y="303" text-anchor="middle">若 current 仍 active：terminate(current)</text><text x="385" y="325" text-anchor="middle">并调用 completion_callback_()</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M385 342V372"/>
+              <path class="nw-box" d="M385 372L530 409L385 446L240 409Z"/><text x="385" y="414" text-anchor="middle">pending active？</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M240 409H72V36H190"/>
+              <text x="90" y="377" class="nw-green">是：accept_pending_goal()</text><text x="90" y="394" class="nw-small">复用线程，下一轮再调用 execute</text>
+              <path class="nw-arrow" marker-end="url(#nw-work-tip)" d="M530 409H656"/><text x="578" y="397" class="nw-small">否</text>
+              <rect class="nw-box" x="656" y="385" width="222" height="48" rx="8"/><text x="767" y="414" text-anchor="middle">退出；future ready</text>
+              <text x="450" y="482" text-anchor="middle" class="nw-small">入口条件不满足也直接退出。应用需要在执行过程中自行检查取消、抢占和停用。</text>
+            </svg></div>
+          </figure>
+          <p><code>succeeded_current()</code> 只调用 <code>current_handle_-&gt;succeed(result)</code> 并清空 current；线程是否结束取决于业务是否 return。若 return 后还有 pending，work 会在原线程重新调用 execute。</p>
+          <p class="nw-callout warning"><code>completion_callback_</code> 是异常 / 失败 / 停用收尾通知，不是每次成功后的回调，也不是客户端的 result_callback。当前源码在调用前会判空；示例仍提供回调，以便观察异常和停用收尾。</p>
+        </details>
+
+        <details class="nw-card nw-key-section" id="nw-cancel" open>
+          <summary>05 · 取消是协作过程：许可 → 检查 → 清理 → 结果</summary>
+          <figure class="nw-figure nw-figure-compact">
+            <figcaption>取消时序 · 以只有 current G1 的情况为例</figcaption>
+            <div class="nw-diagram-scroll"><svg viewBox="0 0 900 380" role="img" aria-labelledby="nw-cancel-title">
+              <title id="nw-cancel-title">取消回调接受后返回 Cancel Response，应用稍后检查取消并终止 Goal，最后返回 CANCELED Result</title>
+              <defs><marker id="nw-cancel-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker><marker id="nw-cancel-reply" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#c4b5fd"/></marker></defs>
+              <rect class="nw-box" x="40" y="10" width="160" height="40" rx="8"/><text x="120" y="36" text-anchor="middle" class="nw-title">Client</text>
+              <rect class="nw-box" x="295" y="10" width="230" height="40" rx="8"/><text x="410" y="36" text-anchor="middle" class="nw-title">Action Server / 底层状态机</text>
+              <rect class="nw-box" x="650" y="10" width="220" height="40" rx="8"/><text x="760" y="36" text-anchor="middle" class="nw-title">用户 execute()</text>
+              <path class="nw-life" d="M120 50V356M410 50V356M760 50V356"/>
+              <path class="nw-arrow" marker-end="url(#nw-cancel-tip)" d="M120 88H410"/><text x="138" y="76">CancelGoal.Request：G1</text>
+              <rect class="nw-box" x="295" y="105" width="230" height="46" rx="6"/><text x="410" y="124" text-anchor="middle">handle_cancel() → ACCEPT</text><text x="410" y="142" text-anchor="middle" class="nw-small">底层推进 G1 → CANCELING</text>
+              <path class="nw-reply" marker-end="url(#nw-cancel-reply)" d="M410 181H120"/><text x="136" y="169">Cancel Response：ERROR_NONE</text>
+              <text x="760" y="161" text-anchor="middle" class="nw-yellow">业务仍在运行</text>
+              <rect class="nw-box" x="632" y="203" width="248" height="68" rx="6"/><text x="756" y="224" text-anchor="middle">到达业务检查点</text><text x="756" y="243" text-anchor="middle">is_cancel_requested() → true</text><text x="756" y="262" text-anchor="middle">清理业务资源、terminate_all()</text>
+              <path class="nw-arrow" marker-end="url(#nw-cancel-tip)" d="M760 298H410"/><text x="445" y="286">内部 terminate → handle-&gt;canceled(result)</text>
+              <path class="nw-reply" marker-end="url(#nw-cancel-reply)" d="M410 337H120"/><text x="136" y="325">GetResult.Response：CANCELED</text>
+              <text x="760" y="339" text-anchor="middle">execute return → work() 收尾</text>
+            </svg></div>
+            <p>图中应用采用“检查取消后 terminate_all() 并 return”的策略，与 Nav2 仿真一致。实际跨线程 / 跨 Service 的响应到达顺序不保证；Cancel Response 与 Result Response 之间没有固定的 50ms 延迟。</p>
+          </figure>
+          <div class="nw-table"><table><thead><tr><th>结束方法</th><th>目标 Handle / 状态规则</th><th>结果</th></tr></thead><tbody>
+            <tr><td>succeeded_current(result)</td><td>结束当前 Goal，清空 current</td><td>SUCCEEDED</td></tr>
+            <tr><td>terminate_current(result)</td><td>只结束 current：CANCELING → canceled，其它 active → abort</td><td>CANCELED 或 ABORTED</td></tr>
+            <tr><td>terminate_all(result)</td><td>对 current / pending 分别执行上述判断，清抢占标志</td><td>不同 Goal 可以得到不同的终态</td></tr>
+            <tr><td>publish_feedback(feedback)</td><td>检查 current active，然后转发到 GoalHandle</td><td>Feedback Topic；不改变 Goal 终态</td></tr>
+          </tbody></table></div>
+          <details open><summary>本版本细节：is_cancel_requested() 优先查询 pending</summary>
+<pre class="language-cpp">if (current_handle_ == nullptr) {
+  return false;
+}
+if (pending_handle_ != nullptr) {
+  return pending_handle_-&gt;is_canceling();
+}
+return current_handle_-&gt;is_canceling();</pre>
+            <p>例如 G1=current 且 CANCELING、G2=pending 且 EXECUTING，此查询返回 false，并非两个 Handle 的逻辑“或”。若取消的是 G2，则查询为 true；应用调用 terminate_all() 后，G1 可能 ABORTED、G2 为 CANCELED。</p>
+          </details>
+          <p class="note">仿真在 CANCELING 后停止生成自动 Feedback，这是示例应用的策略；本地封装 publish_feedback() 仅检查 active，并未自动实施这个策略。在途 Feedback 与取消响应可并行到达。</p>
+        </details>
+
+        <details class="nw-card nw-key-section" id="nw-lifecycle" open>
+          <summary>06 · 生命周期与线程：停用入口，不等于强杀业务</summary>
+          <div class="nw-step">
+            <div><strong>activate()</strong><br>active=true、stop=false；允许新 Goal。</div>
+            <div><strong>deactivate()</strong><br>active=false、stop=true；新 Goal 被拒绝。</div>
+            <div><strong>等待 future</strong><br>每 100ms 检查；默认达到 500ms 后 terminate_all 并报告超时。</div>
+            <div><strong>回调退出</strong><br>work() 收尾、future ready，deactivate() 才能结束等待。</div>
+          </div>
+          <p class="nw-callout warning"><code>server_timeout_</code> 是停用等待的超时检查阈值，不是任务执行时间上限。超时后循环仍等待，后续轮次还可能再次进入超时分支；无法强行终止一个卡住的 execute 回调。</p>
+          <div class="nw-table"><table><thead><tr><th>机制</th><th>实现与目的</th></tr></thead><tbody>
+            <tr><td>spin_thread=false</td><td>通信回调交给外部 Executor；任务仍通过 std::async 在后台执行</td></tr>
+            <tr><td>spin_thread=true</td><td>单独的 MutuallyExclusive callback group + SingleThreadedExecutor + NodeThread 驱动通信；后台业务线程另算</td></tr>
+            <tr><td>is_running()</td><td>检查 execution_future_.valid() 且 wait_for(0) 为 timeout；它反映线程工作是否未结束，不等同于 current 非空</td></tr>
+            <tr><td>recursive_mutex</td><td>保护槽位和标志更新，允许 terminate_all → terminate 等内部嵌套加锁；不意味着应用的全部资源自动线程安全</td></tr>
+          </tbody></table></div>
+          <p>应用通常在节点生命周期回调中调用 activate / deactivate；SimpleActionServer 自身不是 LifecycleNode。执行逻辑应分段工作并检查 <code>is_server_active()</code>、取消与抢占，及时清理后 return。</p>
+        </details>
+        </details>
+        <section class="sas-example-intro" aria-labelledby="sas-example-title">
+          <h4 id="sas-example-title">Fibonacci 简化 C++ Server：校验、反馈、取消与抢占</h4>
+          <p>使用 <code>action_tutorials_interfaces/action/Fibonacci</code>：Goal 为 order，Feedback / Result 为 sequence。这里采用序列 [0, 1] 起步，计算到 F(order)，即返回 order+1 项；限制 1～20 方便演示。客户端可复用 ROS 2 基础中的 Fibonacci Client，服务名为 <code>fibonacci</code>。</p>
+          <button class="learning-button" id="sas-code-open" type="button" aria-haspopup="dialog">查看完整 C++ 代码</button>
+          <p>依赖：rclcpp、nav2_ros_common、action_tutorials_interfaces。示例展示协作式检查顺序；实际系统还需考虑取消与成功并发到达、业务资源清理，以及本版本 pending 优先查询的限制。</p>
+        </section>
+        <dialog class="source-dialog" id="sas-code-dialog" aria-labelledby="sas-code-title">
+          <div class="source-dialog-shell">
+            <header class="source-dialog-head"><div class="source-dialog-title"><strong id="sas-code-title">Fibonacci · Nav2 SimpleActionServer C++ 示例</strong><div class="source-dialog-meta">action_tutorials_interfaces/action/Fibonacci</div></div><div class="source-dialog-actions"><button class="source-dialog-close" id="sas-code-close" type="button" aria-label="关闭 C++ 代码窗口">×</button></div></header>
+            <div class="source-code-frame"><pre><code data-sas-example></code></pre></div>
+          </div>
+        </dialog>
+        <details id="sas-simulation"><summary>Fibonacci · Nav2 封装仿真（点击展开）</summary>
+          <div class="sas-sim-title"><h4>Nav2 SimpleActionServer 仿真</h4><p>按当前 <code>simple_action_server.hpp</code> 实现。左侧 Client 发起请求，中间观察 Goal 槽位与通信，右侧处理 Server 回调和业务执行。</p></div>
+          <div class="sas-toolbar"><label>分步场景 <select id="sas-scene"><option value="success">正常计算 → 成功</option><option value="invalid">未激活 / 校验失败 → 拒绝</option><option value="preempt">G2 被 G3 覆盖 → 抢占</option><option value="handoff">当前完成 → 接续 pending</option><option value="cancel">取消 current → 检查收尾</option><option value="priority">pending 遮蔽 current 取消</option><option value="cancelPending">取消 pending → 两个不同终态</option><option value="stop">停用超时 → 等待业务退出</option><option value="exception">异常 → 终止全部</option><option value="unfinished">未结束 Goal 就 return</option></select></label><button id="sas-load" type="button">载入场景</button><button id="sas-next" type="button">下一步</button><button id="sas-auto" type="button">自动演示</button><button id="sas-pause" type="button">暂停</button><button id="sas-reset" type="button">重置</button><label>速度 <select id="sas-speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label><label><input id="sas-slow-demo" type="checkbox"> 慢速演示</label><span id="sas-clock">0.00 s</span><p id="sas-guide" aria-live="polite"></p></div>
+          <div class="sas-workspace">
+            <section class="sas-panel sas-client"><h4>Action Client</h4><div class="sas-statusline" id="sas-client-status">等待操作</div><label>Fibonacci.goal.order</label><input id="sas-order" type="number" min="1" max="20" value="5"><button type="button" data-sas="send">发送 Goal</button><label>取消指定 Goal</label><select id="sas-target" aria-label="取消目标"></select><button type="button" data-sas="cancel">async_cancel_goal()</button><details><summary>Client 操作说明</summary><p>Goal Response 到达后客户端才能使用 GoalHandle。本仿真自动请求 get_result，服务端未结束时保留请求等待结果。</p></details></section>
+            <div class="sas-center">
+              <section class="sas-inside"><h4>封装内部 · 一个 current + 一个 pending</h4><div class="sas-flags" id="sas-flags" aria-live="polite"></div><div class="sas-slots"><div><strong>current_handle_</strong><span id="sas-current"></span></div><div><strong>pending_handle_</strong><span id="sas-pending"></span></div><div><strong>execution_future_ / work()</strong><span id="sas-worker"></span></div></div><p id="sas-query"></p><small>spin_thread=true：独立通信 Executor + std::async 业务线程</small></section>
+              <section class="sas-wireboard" id="sas-wire" aria-live="polite"><h4>通信动画 <small>Client ⇄ Server</small></h4><div class="sas-last-packet"><strong id="sas-packet">等待通信</strong></div><div class="sas-channels"><div data-sas-channel="goal"><b>Action Client<small>Goal</small></b><i><span>REQUEST →</span><span>← RESPONSE</span></i><b>Action Server<small>send_goal</small></b></div><div data-sas-channel="feedback"><b>Action Client<small>Feedback</small></b><i><span>← TOPIC</span></i><b>Action Server<small>publish_feedback()</small></b></div><div data-sas-channel="cancel"><b>Action Client<small>Cancel</small></b><i><span>REQUEST →</span><span>← RESPONSE</span></i><b>Action Server<small>cancel_goal</small></b></div><div data-sas-channel="result"><b>Action Client<small>Result</small></b><i><span>REQUEST →</span><span>← RESPONSE</span></i><b>Action Server<small>get_result</small></b></div><div data-sas-channel="status"><b>Action Client<small>Status</small></b><i><span>← TOPIC</span></i><b>Action Server<small>GoalStatusArray</small></b></div></div><p>G1 / G2 为 UUID 简写；时延仅用于演示，切换选项卡会暂停。</p></section>
+            </div>
+            <section class="sas-panel sas-server"><h4>SimpleActionServer</h4><div class="sas-statusline" id="sas-server-status">初始未激活</div><h5>① 生命周期 / 封装回调</h5><div class="sas-button-grid"><button type="button" data-sas="activate">activate()</button><button type="button" data-sas="deactivate">deactivate()</button><button type="button" data-sas="timeout">模拟停用超时</button></div><details><summary>封装回调说明</summary><p>Goal 的接受或拒绝由激活状态与校验回调决定；接受后自动安排 current 或 pending。</p></details><h5>② execute_callback_ 内的操作</h5><div class="sas-button-grid"><button type="button" data-sas="step">计算一步 / publish_feedback()</button><button type="button" data-sas="preempt">accept_pending_goal()</button><button type="button" data-sas="drop">terminate_pending_goal()</button><button type="button" data-sas="check">检查取消 → terminate_all() + return</button><button type="button" data-sas="return">return → work() 收尾</button><button type="button" data-sas="exception">抛出 std::exception</button></div><label class="sas-auto-feedback"><input id="sas-auto-feedback" type="checkbox"> 自动 Feedback（默认关闭）</label><details open><summary>取消与执行收尾说明</summary><p>接受取消不会自动返回 Result；执行逻辑调用终止方法后才产生结果。<code>succeeded_current()</code> 也不等于 execute 已 return。</p></details></section>
+          </div>
+          <details class="sas-record-box"><summary>逐 Goal 记录与事件日志 · 点击展开</summary><h4>逐 Goal 记录 · Server 状态与 Client 观测分开显示</h4><div class="sas-table-wrap"><table class="concept-table"><thead><tr><th>Goal / order</th><th>Server 状态 / 槽位</th><th>Client Goal Response</th><th>Client Feedback</th><th>get_result / Client Result</th></tr></thead><tbody id="sas-records"></tbody></table></div><h4>事件日志</h4><ol id="sas-log" class="ros-action-log" aria-label="Nav2 Fibonacci 仿真日志" aria-live="polite"></ol></details>
+        </details>`;
+      content.querySelector('[data-sas-example]').textContent = `#include <chrono>
+#include <memory>
+#include <thread>
+#include "rclcpp/rclcpp.hpp"
+#include "action_tutorials_interfaces/action/fibonacci.hpp"
+#include "nav2_ros_common/simple_action_server.hpp"
+
+using Fib = action_tutorials_interfaces::action::Fibonacci;
+using Server = nav2::SimpleActionServer<Fib>;
+using namespace std::chrono_literals;
+
+int main(int argc, char ** argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("nav2_fibonacci");
+  Server::SharedPtr server;
+  auto execute = [&]() {
+    auto goal = server->get_current_goal();
+    if (!goal) {return;}
+    auto feedback = std::make_shared<Fib::Feedback>();
+    feedback->sequence = {0, 1};
+    while (rclcpp::ok()) {
+      if (!server->is_server_active()) {
+        server->terminate_all();
+        return;
+      }
+      if (server->is_cancel_requested()) {
+        // 默认空结果，避免把 current 的序列当作 pending 的结果。
+        server->terminate_all();
+        return;
+      }
+      if (server->is_preempt_requested()) {
+        goal = server->accept_pending_goal();
+        if (!goal) {return;}
+        feedback->sequence = {0, 1};  // 新目标重新计算
+      }
+      auto & seq = feedback->sequence;
+      if (seq.size() < static_cast<size_t>(goal->order + 1)) {
+        seq.push_back(seq[seq.size() - 1] + seq[seq.size() - 2]);
+        server->publish_feedback(feedback);
+      } else {
+        auto result = std::make_shared<Fib::Result>();
+        result->sequence = seq;
+        server->succeeded_current(result);
+        return;  // work() 可继续接管 pending
+      }
+      std::this_thread::sleep_for(100ms);
+    }
+    server->terminate_all();
+  };
+  server = std::make_shared<Server>(
+    node, "fibonacci", execute,
+    [](std::shared_ptr<const Fib::Goal> goal) {
+      return goal->order >= 1 && goal->order <= 20;
+    },
+    [node]() {RCLCPP_WARN(node->get_logger(), "封装失败/停止收尾通知");},
+    500ms, false);  // 通信由下面的 spin 驱动，业务线程由封装创建
+  server->activate();
+  rclcpp::spin(node);
+  server->deactivate();  // 等业务返回后再释放对象
+  server.reset();
+  rclcpp::shutdown();
+  return 0;
+}`;
+      content.querySelectorAll('pre.language-cpp, pre.sas-code').forEach(pre => {
+        const code = pre.querySelector('code') || pre;
+        code.innerHTML = code.textContent.replaceAll('\r\n', '\n').split('\n')
+          .map(line => highlightSourceLine(line, 'cpp')).join('\n');
+      });
+      const sasExampleCode = content.querySelector('[data-sas-example]');
+      sasExampleCode.innerHTML = renderSource(sasExampleCode.textContent, 'fibonacci_simple_action_server.cpp');
+      const sasCodeDialog = content.querySelector('#sas-code-dialog');
+      content.querySelector('#sas-code-open').addEventListener('click', () => sasCodeDialog.showModal());
+      content.querySelector('#sas-code-close').addEventListener('click', () => sasCodeDialog.close());
+      sasCodeDialog.addEventListener('click', event => { if (event.target === sasCodeDialog) sasCodeDialog.close(); });
+      card.querySelector('.concept-source').before(content);
+      const get = name => byId('sas-' + name);
+      const demoRate = () => Number(get('speed').value) * (get('slow-demo').checked ? .35 : 1);
+      let active = false, stopping = false, running = false, current = null, pending = null;
+      let goals = [], queue = [], cursor = 0, timer = null, feedbackTimer = null, wireTimer = null, wireBusy = false, wireQueue = [], virtualTime = 0;
+      const alive = g => g && ['EXECUTING', 'CANCELING'].includes(g.status);
+      const cancelQuery = () => !!current && (pending ? pending.status === 'CANCELING' : current.status === 'CANCELING');
+      function log(message) { const li = document.createElement('li'); li.textContent = message; get('log').append(li); get('log').scrollTop = get('log').scrollHeight; }
+      function pumpWire() {
+        if (wireBusy || !wireQueue.length) return;
+        wireBusy = true;
+        const event = wireQueue.shift(), row = get('wire').querySelector('[data-sas-channel="' + event.channel + '"]');
+        get('packet').textContent = event.headline;
+        get('wire').querySelectorAll('[data-sas-channel]').forEach(item => item.classList.toggle('active', item === row));
+        const packet = document.createElement('u');
+        packet.className = 'sas-channel-packet' + (event.reverse ? ' reverse' : '');
+        packet.textContent = event.text;
+        const duration = .9 / demoRate();
+        packet.style.animationDuration = duration + 's';
+        const lanes = row.querySelectorAll('i > span');
+        (event.reverse ? lanes[lanes.length - 1] : lanes[0]).append(packet);
+        wireTimer = setTimeout(() => { packet.remove(); wireBusy = false; wireTimer = null; pumpWire(); }, duration * 1000 + 30);
+      }
+      function queueWire(events) { wireQueue.push(...events); pumpWire(); }
+      function clearWire() { clearTimeout(wireTimer); wireTimer = null; wireBusy = false; wireQueue = []; get('wire').querySelectorAll('.sas-channel-packet').forEach(packet => packet.remove()); }
+      function wire(message, backwards = false, response = 'ACCEPTED') {
+        const label = message.replaceAll('←', '').replaceAll('→', '').replaceAll('⇄', '').trim();
+        if (message.includes('SendGoal')) {
+          const events = [{channel:'goal', reverse:false, text:label, headline:'① SendGoal.Request → Action Server'}];
+          events.push({channel:'goal', reverse:true, text:response, headline:'② SendGoal.Response ← ' + response});
+          if (response === 'ACCEPTED') events.push({channel:'result', reverse:false, text:'GetResult.Request', headline:'③ GetResult.Request → 等待最终结果'});
+          queueWire(events);
+        } else if (message.includes('Cancel')) queueWire([
+          {channel:'cancel', reverse:false, text:label, headline:'CancelGoal.Request → Action Server'},
+          {channel:'cancel', reverse:true, text:'ERROR_NONE', headline:'CancelGoal.Response ← ERROR_NONE'}
+        ]);
+        else if (message.includes('GetResult')) queueWire([
+          {channel:'result', reverse:true, text:label, headline:'GetResult.Response ← ' + label},
+          {channel:'status', reverse:true, text:'STATUS', headline:'Status Topic ← GoalStatusArray'}
+        ]);
+        else if (message.includes('Feedback')) queueWire([{channel:'feedback', reverse:true, text:label, headline:message}]);
+      }
+      function finish(g, status, sequence = []) {
+        if (!alive(g)) return;
+        g.status = status; g.result = sequence.slice();
+        log(g.id + ' → ' + status + '，GetResult.sequence=[' + sequence + ']；底层发布 Status');
+        wire('← GetResult / Status：' + g.id + ' ' + status, true);
+      }
+      function terminate(g) { finish(g, g?.status === 'CANCELING' ? 'CANCELED' : 'ABORTED'); }
+      function terminateAll() { terminate(current); terminate(pending); current = pending = null; }
+      function accept() {
+        if (!alive(pending)) { log('没有可接管的 pending'); return; }
+        finish(current, 'ABORTED'); current = pending; pending = null; current.sequence = [0, 1];
+        log('accept_pending_goal() → current=' + current.id + '，序列重置，清除抢占标志');
+      }
+      function returned() {
+        if (!running) { log('工作线程已空闲'); return; }
+        if (stopping) { terminateAll(); running = false; log('work() 发现 stop → completion_callback → 线程退出，deactivate 等待结束'); return; }
+        if (alive(current)) { terminate(current); current = null; log('execute 未结束目标就 return → completion_callback'); }
+        if (alive(pending)) { accept(); log('work() 复用线程，再次调用 execute'); }
+        else { running = false; log('work() 无待处理目标 → future ready'); }
+      }
+      function render() {
+        get('flags').replaceChildren();
+        [['server_active_', active], ['stop_execution_', stopping], ['preempt_requested_', !!pending], ['is_running()', running]].forEach(([label, value]) => { const span = document.createElement('span'); span.classList.toggle('on', value); span.textContent = label + ' = ' + value; get('flags').append(span); });
+        const describe = g => g ? g.id + ' · order=' + g.order + ' · ' + g.status + ' · sequence=[' + g.sequence + ']' : '∅';
+        get('current').textContent = describe(current); get('pending').textContent = describe(pending);
+        get('worker').textContent = running ? '线程运行中\nexecute 尚未 return' : '线程空闲\nfuture ready';
+        get('query').textContent = 'is_cancel_requested() = ' + cancelQuery() + (pending ? '（只查询 pending）' : '（查询 current；无 current 则 false）');
+        const selected = get('target').value; get('target').replaceChildren();
+        goals.filter(alive).forEach(g => { const o = document.createElement('option'); o.value = g.id; o.textContent = g.id; get('target').append(o); });
+        if ([...get('target').options].some(o => o.value === selected)) get('target').value = selected;
+        get('records').replaceChildren();
+        goals.forEach(g => { const tr = document.createElement('tr'); [g.id + ' / ' + g.order, g.status + (g === current ? ' / current' : g === pending ? ' / pending' : ''), 'accepted=' + g.accepted, g.feedback ? '[' + g.feedback + ']' : '—', g.result ? g.status + ' / [' + g.result + ']' : '等待'].forEach(t => { const td = document.createElement('td'); td.textContent = t; tr.append(td); }); get('records').append(tr); });
+        const last = goals.at(-1);
+        get('client-status').textContent = !last ? '等待操作' : last.result ? last.id + ' 收到最终结果 ' + last.status : last.accepted ? last.id + ' · ' + last.status + (last.feedback ? ' · Feedback=[' + last.feedback + ']' : '') : last.id + ' Goal 被拒绝';
+        get('server-status').textContent = current ? current.id + ' 正在处理 · ' + current.status : pending ? pending.id + ' 等待处理' : active ? '已激活 · 等待 Goal' : stopping && running ? '停用中 · 等待业务退出' : '未激活 / 空闲';
+        get('clock').textContent = virtualTime.toFixed(2) + ' s';
+        get('guide').textContent = queue.length ? '场景进度 ' + cursor + '/' + queue.length + (cursor < queue.length ? ' · 下一步：' + queue[cursor][2] : ' · 已完成，可继续手动操作') : '可手动发送目标；自动模式仅播放载入的场景。';
+        get('next').disabled = get('auto').disabled = cursor >= queue.length;
+        const buttons = action => content.querySelector('[data-sas="' + action + '"]');
+        buttons('activate').disabled = active || (stopping && running); buttons('deactivate').disabled = !active;
+        buttons('step').disabled = !running; buttons('check').disabled = !running; buttons('preempt').disabled = !alive(pending); buttons('drop').disabled = !alive(pending);
+        buttons('return').disabled = !running; buttons('exception').disabled = !running; buttons('timeout').disabled = !(stopping && running); buttons('cancel').disabled = !goals.some(alive);
+      }
+      function act(action, value) {
+        virtualTime += 0.25;
+        if (action === 'activate') { if (running && stopping) log('先让旧业务退出，再重新 activate'); else { active = true; stopping = false; log('activate() → 开放 Goal 入口'); } }
+        if (action === 'send') {
+          const order = value ?? Number(get('order').value); const g = {id:'G' + (goals.length + 1), order, status:'REJECTED', accepted:false, sequence:[0, 1]}; goals.push(g);
+          if (!active || !Number.isInteger(order) || order < 1 || order > 20) { log(g.id + ' GoalResponse.accepted=false：' + (!active ? '服务器未激活' : 'goal_received_callback 校验失败')); wire('SendGoal → ' + g.id + ' · order=' + order, false, 'REJECTED'); }
+          else {
+            wire('SendGoal → ' + g.id + ' · order=' + order);
+            g.status = 'EXECUTING'; g.accepted = true; log(g.id + ' SendGoal.accepted=true；Client 发起 GetResult 等待；Status=EXECUTING');
+            if (alive(current) || running) { terminate(pending); pending = g; log(g.id + ' → pending，等待业务检查抢占'); }
+            else { current = g; running = true; log(g.id + ' → current；std::async → work → execute'); }
+          }
+        }
+        if (action === 'cancel') { const g = goals.find(g => g.id === (value || get('target').value)); if (alive(g)) { g.status = 'CANCELING'; log(g.id + ' handle_cancel → ACCEPT；Cancel Response 接受，尚无 Result'); wire('CancelGoal ⇄ ' + g.id + ' → CANCELING'); } else log('没有可取消的活动 Goal'); }
+        if (action === 'check') { if (cancelQuery()) { log('查询取消为 true → 应用 terminate_all() 并 return'); terminateAll(); returned(); } else log('查询取消为 false；若 pending 存在，不代表 current 未收到取消'); }
+        if (action === 'preempt' && running) accept();
+        if (action === 'drop') { terminate(pending); pending = null; log('terminate_pending_goal()，清除抢占标志'); }
+        if (action === 'step') {
+          if (!running) log('没有运行中的 execute');
+          else if (!active) { log('execute 检查停用 → terminate_all 并 return'); terminateAll(); returned(); }
+          else if (!alive(current)) log('current 已结束，请执行 return → work 收尾');
+          else if (current.status === 'CANCELING') log('本教学操作暂停计算，请检查取消；有 pending 时可观察查询限制');
+          else if (current.sequence.length < current.order + 1) { const s = current.sequence; s.push(s[s.length - 1] + s[s.length - 2]); current.feedback = s.slice(); log(current.id + ' publish_feedback：[' + s + ']'); wire('← Feedback ' + current.id + ' [' + s + ']', true); }
+          else { finish(current, 'SUCCEEDED', current.sequence); current = null; log('succeeded_current() 已返回结果，execute 尚未 return'); }
+        }
+        if (action === 'return') returned();
+        if (action === 'exception' && running) { terminateAll(); running = false; log('捕获 std::exception → completion_callback → work 退出'); }
+        if (action === 'deactivate') { active = false; stopping = true; log(running ? 'deactivate 设置 stop，等待 future；教学模型将等待拆成后续步骤' : 'deactivate：没有工作线程，直接返回'); }
+        if (action === 'timeout' && stopping && running) { terminateAll(); log('模拟超过 500ms：terminate_all + completion_callback；仍等待业务线程，不强杀'); }
+        render();
+      }
+      const steps = n => Array.from({length:n}, () => ['step', null, '计算 / Feedback 或成功']);
+      const A = ['activate', null, '激活服务器'], R = ['return', null, '业务 return，work 收尾'];
+      const send = n => ['send', n, '发送 order=' + n];
+      const scenarios = {
+        success: [A, send(5), ...steps(5), R],
+        invalid: [send(5), A, send(0)],
+        preempt: [A, send(5), ...steps(1), send(4), send(3), ['preempt', null, '接管 G3，G1 ABORTED'], ...steps(3), R],
+        handoff: [A, send(2), send(3), ...steps(2), R, ...steps(3), R],
+        cancel: [A, send(5), ...steps(1), ['cancel','G1','请求取消 G1'], ['check',null,'业务检查取消并收尾']],
+        priority: [A, send(5), send(3), ['cancel','G1','请求取消 current G1'], ['check',null,'pending 未取消，查询返回 false'], ['preempt',null,'抢占：旧 G1 ABORTED，而非 CANCELED'], ...steps(3), R],
+        cancelPending: [A, send(5), send(3), ['cancel','G2','请求取消 pending G2'], ['check',null,'terminate_all：G1 ABORTED / G2 CANCELED']],
+        stop: [A, send(5), ['deactivate',null,'设置 stop 并等待'], ['timeout',null,'超过阈值，终止 Goal 但线程仍运行'], R],
+        exception: [A, send(5), send(3), ['exception',null,'业务抛出 std::exception']],
+        unfinished: [A, send(5), R]
+      };
+      function pauseScenario() { clearInterval(timer); timer = null; }
+      function stopAutoFeedback() { clearInterval(feedbackTimer); feedbackTimer = null; }
+      function pause() { pauseScenario(); stopAutoFeedback(); clearWire(); }
+      function startAutoFeedback() {
+        stopAutoFeedback();
+        if (!get('auto-feedback').checked || !get('simulation').open || !card.open || byId('ros-common-services').hidden || document.hidden) return;
+        feedbackTimer = setInterval(() => {
+          if (timer || !running || !active || !alive(current) || current.status === 'CANCELING') return;
+          act('step');
+          if (running && !current) { returned(); render(); }
+        }, 900 / demoRate());
+      }
+      function reset() { pause(); get('auto-feedback').checked = false; active = stopping = running = false; current = pending = null; goals = []; queue = []; cursor = 0; virtualTime = 0; get('log').replaceChildren(); get('packet').textContent = '等待通信'; get('wire').classList.remove('sas-moving'); get('wire').querySelectorAll('[data-sas-channel]').forEach(row => row.classList.remove('active')); render(); }
+      function next() { if (cursor >= queue.length) { pauseScenario(); return; } const [action, value] = queue[cursor++]; act(action, value); if (cursor === queue.length) pauseScenario(); }
+      get('load').addEventListener('click', () => { reset(); queue = scenarios[get('scene').value]; render(); });
+      get('next').addEventListener('click', () => { pauseScenario(); next(); });
+      get('auto').addEventListener('click', () => { if (!timer && cursor < queue.length) timer = setInterval(next, 1100 / demoRate()); });
+      const updateDemoRate = () => { if (timer) { pauseScenario(); timer = setInterval(next, 1100 / demoRate()); } if (get('auto-feedback').checked) startAutoFeedback(); };
+      get('speed').addEventListener('change', updateDemoRate);
+      get('slow-demo').addEventListener('change', updateDemoRate);
+      get('auto-feedback').addEventListener('change', () => {
+        if (get('auto-feedback').checked) { log('自动 Feedback 已开启：运行中的 Goal 将按当前速度持续计算并发布反馈'); startAutoFeedback(); }
+        else { stopAutoFeedback(); log('自动 Feedback 已关闭'); }
+        render();
+      });
+      get('pause').addEventListener('click', pause); get('reset').addEventListener('click', reset);
+      content.querySelectorAll('[data-sas]').forEach(button => button.addEventListener('click', () => { pauseScenario(); queue = []; cursor = 0; act(button.dataset.sas); }));
+      get('simulation').addEventListener('toggle', () => { if (!get('simulation').open) pause(); else startAutoFeedback(); });
+      card.addEventListener('toggle', () => { if (!card.open) pause(); else startAutoFeedback(); });
+      new MutationObserver(() => { if (byId('ros-common-services').hidden) pause(); else startAutoFeedback(); }).observe(byId('ros-common-services'), {attributes:true, attributeFilter:['hidden']});
+      document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); else startAutoFeedback(); });
+      reset();
+    }
+    expandSimpleActionServerIntroduction();
 
     function createFibonacciSimulation() {
       const get = id => byId('fib-' + id);
