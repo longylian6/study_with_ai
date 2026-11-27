@@ -151,6 +151,7 @@
     .interface-fields dt { font-weight:600; margin-top:10px; }
     .interface-fields dd { margin:4px 0 0; overflow-wrap:anywhere; }
     .interface-card .concept-source { overflow-wrap:anywhere; }
+    .interface-card h5 { margin:18px 0 8px; font-size:13px; font-weight:650; }
     .package-reference .interface-definition { background:#fafcfc; border:0; padding:8px 10px; }
     .interface-definition > h4 { margin:0 0 8px; font-size:12px; color:var(--muted); font-weight:600; }
     .learning-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:14px 0 10px; }
@@ -327,6 +328,25 @@
     .nw-figure-compact svg text { font-size:15px; }
     .nw-figure-compact svg .nw-small { font-size:13px; }
     .nw-figure-compact svg .nw-title { font-size:16.5px; }
+    @keyframes lc-path-flow { to { stroke-dashoffset:-26; } }
+    #ros2-lifecycle-card svg path[stroke="#79cfff"] { stroke:#2563eb; }
+    #ros2-lifecycle-card svg path[stroke="#a7b8cb"] { stroke:#15803d; }
+    #ros2-lifecycle-card svg path[stroke="#f7c76b"] { stroke:#ea580c; }
+    #ros2-lifecycle-card svg rect[fill="#203f61"] { fill:#dbeafe; stroke:#3b82f6; }
+    #ros2-lifecycle-card svg rect[fill="#373829"] { fill:#fff3b0; stroke:#eab308; }
+    #ros2-lifecycle-card .nw-figure { background:#f0f0f0; border-color:#d1d5db; }
+    .lc-sim-layout { display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:14px; align-items:start; max-width:1248px; margin:8px auto 0; }
+    .lc-sim-visual, .lc-sim-controls { min-width:0; }
+    .lc-sim-visual .nw-figure { margin:0 auto; padding:8px; }
+    .lc-sim-visual .nw-figure svg { width:100% !important; min-width:600px !important; }
+    .lc-sim-controls { padding:12px; border:1px solid #cbdbe7; border-radius:8px; background:#fff; overflow-wrap:anywhere; }
+    .lc-sim-controls > :first-child { margin-top:0; }
+    .lc-sim-controls .ros-action-controls { gap:6px; }
+    .lc-sim-controls [data-lc-actions] { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .lc-sim-controls .ros-action-log { max-height:230px; overflow:auto; }
+    .lc-sim-controls .concept-example { max-height:130px; overflow:auto; }
+    @media(max-width:1000px) { .lc-sim-layout { grid-template-columns:minmax(0,1fr); } }
+    @media(prefers-reduced-motion:reduce) { #ros2-lifecycle-card svg path { animation:none !important; } }
     .nw-snapshots { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:14px 0; }
     .nw-snapshot { padding:12px; border:1px solid #cadbea; border-radius:8px; background:#f2f7fc; font-size:13px; }
     .nw-snapshot strong { display:block; margin-bottom:8px; color:#1769aa; }
@@ -3371,6 +3391,409 @@ LocalPlanEvaluation results</code></pre></div>
       arrange();
     }
     createRosFileCanvas('topology');
+
+    function createLifecycleBasics() {
+      const card = document.createElement('details');
+      card.className = 'interface-card'; card.id = 'ros2-lifecycle-card';
+      card.innerHTML = `<summary><code>LifecycleNode</code><span>生命周期节点：先配置，再允许业务运行</span></summary>
+        <p>普通节点创建后即可开始工作；生命周期节点把<strong>资源准备</strong>与<strong>业务启停</strong>分开。外部管理器请求转换，节点执行对应回调并报告结果，方便导航模块按依赖顺序启动、暂停和恢复。</p>
+        <div class="concept-grid"><section><h4>四个主状态</h4><p><code>Unconfigured</code> 未配置 · 等待准备资源<br><code>Inactive</code> 已配置 · 暂停业务<br><code>Active</code> 已激活 · 允许业务运行<br><code>Finalized</code> 已终结 · 等待销毁或重建</p></section><section><h4>管理器与节点怎样配合？</h4><p><code>change_state</code> 请求转换 → 节点执行回调 → 返回 <code>success</code>。管理器通过 <code>get_state</code> 确认状态；<code>transition_event</code> Topic 用于观察转换。</p><p>Finalized 不等于进程退出；创建和销毁对象也不是 change_state 服务动作。</p></section></div>
+        <figure class="nw-figure nw-figure-compact">
+          <div class="nw-diagram-scroll"><svg viewBox="0 0 1000 660" role="img" aria-labelledby="lc-basic-title lc-basic-desc" style="width:min(100%,900px);min-width:760px">
+          <title id="lc-basic-title">生命周期状态机：主状态与转换状态</title>
+          <desc id="lc-basic-desc">参考 ROS 2 设计图布局。主状态纵向排列；FAILURE 虚线返回原主状态。所有 E 出口进入 ErrorProcessing。shutdown 成功或失败到 Finalized；on_error 成功到 Unconfigured，失败或错误到 Finalized。</desc>
+          <defs><marker id="lc-action" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="none" stroke="#79cfff"/></marker><marker id="lc-result" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="none" stroke="#a7b8cb"/></marker><marker id="lc-failure" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="none" stroke="#f7c76b"/></marker></defs>
+          <path d="M240 50H405" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="310" y="39" text-anchor="middle" style="fill:#000000;font-size:13px">create</text>
+          <path d="M525 88L605 162" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="605" y="121" text-anchor="middle" style="fill:#000000;font-size:13px">configure</text>
+          <path d="M615 216L520 280" fill="none" stroke="#a7b8cb" stroke-width="2.6"  marker-end="url(#lc-result)"/>
+          <text x="610" y="252" text-anchor="middle" style="fill:#000000;font-size:13px">SUCCESS</text>
+          <path d="M650 162V68H555" fill="none" stroke="#f7c76b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#lc-failure)"/>
+          <text x="690" y="112" text-anchor="middle" style="fill:#000000;font-size:13px">FAILURE</text>
+          <path d="M435 280L325 216" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="330" y="254" text-anchor="middle" style="fill:#000000;font-size:13px">cleanup</text>
+          <path d="M325 162L425 88" fill="none" stroke="#a7b8cb" stroke-width="2.6"  marker-end="url(#lc-result)"/>
+          <text x="335" y="120" text-anchor="middle" style="fill:#000000;font-size:13px">SUCCESS</text>
+          <path d="M275 216V298H405" fill="none" stroke="#f7c76b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#lc-failure)"/>
+          <text x="255" y="264" text-anchor="middle" style="fill:#000000;font-size:13px">FAILURE</text>
+          <path d="M525 318L605 402" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="605" y="359" text-anchor="middle" style="fill:#000000;font-size:13px">activate</text>
+          <path d="M615 456L520 520" fill="none" stroke="#a7b8cb" stroke-width="2.6"  marker-end="url(#lc-result)"/>
+          <text x="608" y="492" text-anchor="middle" style="fill:#000000;font-size:13px">SUCCESS</text>
+          <path d="M650 402V298H555" fill="none" stroke="#f7c76b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#lc-failure)"/>
+          <text x="690" y="353" text-anchor="middle" style="fill:#000000;font-size:13px">FAILURE</text>
+          <path d="M435 520L325 456" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="330" y="495" text-anchor="middle" style="fill:#000000;font-size:13px">deactivate</text>
+          <path d="M325 402L435 318" fill="none" stroke="#a7b8cb" stroke-width="2.6"  marker-end="url(#lc-result)"/>
+          <text x="340" y="359" text-anchor="middle" style="fill:#000000;font-size:13px">SUCCESS</text>
+          <path d="M275 456V538H405" fill="none" stroke="#f7c76b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#lc-failure)"/>
+          <text x="248" y="503" text-anchor="middle" style="fill:#000000;font-size:13px">FAILURE</text>
+          <path d="M480 50V18H885V270" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="825" y="41" text-anchor="middle" style="fill:#000000;font-size:13px">shutdown</text>
+          <path d="M555 292H800" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="750" y="282" text-anchor="middle" style="fill:#000000;font-size:13px">shutdown</text>
+          <path d="M555 540H885V324" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="872" y="451" text-anchor="end" style="fill:#000000;font-size:13px">shutdown</text>
+          <path d="M940 324V603H215V480H190" fill="none" stroke="#a7b8cb" stroke-width="2.6"  marker-end="url(#lc-result)"/>
+          <text x="630" y="592" text-anchor="middle" style="fill:#000000;font-size:13px">on_shutdown：SUCCESS / FAILURE</text>
+          <path d="M125 162V68H405" fill="none" stroke="#a7b8cb" stroke-width="2.6"  marker-end="url(#lc-result)"/>
+          <text x="230" y="88" text-anchor="middle" style="fill:#000000;font-size:13px">on_error：SUCCESS</text>
+          <path d="M60 216V461" fill="none" stroke="#a7b8cb" stroke-width="1.6"  marker-end="url(#lc-result)"/>
+          <text x="121" y="339" text-anchor="middle" style="fill:#000000;font-size:13px">on_error</text>
+          <text x="121" y="358" text-anchor="middle" style="fill:#000000;font-size:13px">FAILURE / ERROR</text>
+          <path d="M115 499V550" fill="none" stroke="#79cfff" stroke-width="1.6"  marker-end="url(#lc-action)"/>
+          <text x="126" y="532" text-anchor="start" style="fill:#000000;font-size:13px">destroy</text>
+          <circle cx="230" cy="50" r="7" fill="#475569"/><circle cx="115" cy="560" r="9" fill="none" stroke="#475569"/><circle cx="115" cy="560" r="5" fill="#475569"/>
+          <rect x="405" y="50" width="150" height="38" rx="8" fill="#203f61" stroke="#79cfff"/>
+          <text x="480" y="74" text-anchor="middle" style="fill:#000000;font-size:15px">Unconfigured</text>
+          <rect x="405" y="280" width="150" height="38" rx="8" fill="#203f61" stroke="#79cfff"/>
+          <text x="480" y="304" text-anchor="middle" style="fill:#000000;font-size:15px">Inactive</text>
+          <rect x="405" y="520" width="150" height="38" rx="8" fill="#203f61" stroke="#79cfff"/>
+          <text x="480" y="544" text-anchor="middle" style="fill:#000000;font-size:15px">Active</text>
+          <rect x="245" y="162" width="160" height="54" rx="8" fill="#373829" stroke="#c9b86b"/>
+          <text x="325" y="186" text-anchor="middle" style="fill:#000000;font-size:15px">CleaningUp</text>
+          <text x="325" y="206" text-anchor="middle" style="fill:#000000;font-size:12px">on_cleanup()</text>
+          <rect x="565" y="162" width="170" height="54" rx="8" fill="#373829" stroke="#c9b86b"/>
+          <text x="650" y="186" text-anchor="middle" style="fill:#000000;font-size:15px">Configuring</text>
+          <text x="650" y="206" text-anchor="middle" style="fill:#000000;font-size:12px">on_configure()</text>
+          <rect x="245" y="402" width="160" height="54" rx="8" fill="#373829" stroke="#c9b86b"/>
+          <text x="325" y="426" text-anchor="middle" style="fill:#000000;font-size:15px">Deactivating</text>
+          <text x="325" y="446" text-anchor="middle" style="fill:#000000;font-size:12px">on_deactivate()</text>
+          <rect x="565" y="402" width="170" height="54" rx="8" fill="#373829" stroke="#c9b86b"/>
+          <text x="650" y="426" text-anchor="middle" style="fill:#000000;font-size:15px">Activating</text>
+          <text x="650" y="446" text-anchor="middle" style="fill:#000000;font-size:12px">on_activate()</text>
+          <rect x="800" y="270" width="170" height="54" rx="8" fill="#373829" stroke="#c9b86b"/>
+          <text x="885" y="294" text-anchor="middle" style="fill:#000000;font-size:15px">ShuttingDown</text>
+          <text x="885" y="314" text-anchor="middle" style="fill:#000000;font-size:12px">on_shutdown()</text>
+          <rect x="30" y="162" width="175" height="54" rx="8" fill="#373829" stroke="#c9b86b"/>
+          <text x="117.5" y="186" text-anchor="middle" style="fill:#000000;font-size:15px">ErrorProcessing</text>
+          <text x="117.5" y="206" text-anchor="middle" style="fill:#000000;font-size:12px">on_error()</text>
+          <rect x="40" y="461" width="150" height="38" rx="8" fill="#203f61" stroke="#79cfff"/>
+          <text x="115" y="485" text-anchor="middle" style="fill:#000000;font-size:15px">Finalized</text>
+          <circle cx="405" cy="216" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="405" y="220" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <circle cx="735" cy="216" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="735" y="220" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <circle cx="405" cy="456" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="405" y="460" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <circle cx="735" cy="456" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="735" y="460" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <circle cx="970" cy="324" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="970" y="328" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <circle cx="555" cy="558" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="555" y="562" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <circle cx="25" cy="632" r="10" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="25" y="636" text-anchor="middle" style="fill:#b91c1c;font-size:12px">E</text>
+          <text x="48" y="637" text-anchor="start" style="fill:#000000;font-size:14px">E：错误出口 → ErrorProcessing（与原设计图同义）</text>
+          </svg></div>
+          <figcaption style="margin:6px 0 0;font-size:12px;color:#374151">浅蓝框：主状态 · 浅黄框：过渡状态 · 蓝色线：管理动作 · 绿色线：回调结果 · 橙色虚线：FAILURE 返回原状态。布局参考 ROS 2 Lifecycle Node设计图。</figcaption>
+        </figure>
+        <div class="nw-table"><table class="concept-table"><thead><tr><th>动作 / 过渡状态</th><th>C++ 回调与职责</th><th>SUCCESS →</th></tr></thead><tbody>
+          <tr><td>configure / Configuring</td><td><code>on_configure</code>：读参数、创建长期资源</td><td>Inactive</td></tr>
+          <tr><td>activate / Activating</td><td><code>on_activate</code>：启用发布器和业务</td><td>Active</td></tr>
+          <tr><td>deactivate / Deactivating</td><td><code>on_deactivate</code>：停止业务，保留配置</td><td>Inactive</td></tr>
+          <tr><td>cleanup / CleaningUp</td><td><code>on_cleanup</code>：释放配置阶段资源</td><td>Unconfigured</td></tr>
+          <tr><td>shutdown / ShuttingDown</td><td><code>on_shutdown</code>：退出前清理</td><td>Finalized</td></tr>
+          <tr><td>错误处理 / ErrorProcessing</td><td><code>on_error</code>：清理错误现场</td><td>Unconfigured</td></tr>
+        </tbody></table></div>
+        <p class="concept-example"><strong>实现边界：</strong>Inactive 是业务管理约定。LifecyclePublisher 需要激活才能发布；普通订阅、服务和定时器仍需应用自行启停或检查状态。普通业务回调抛异常也不保证自动进入 ErrorProcessing。</p>
+        <details><summary>生命周期仿真（点击展开）</summary><div class="ros-action-sim">
+          <div class="ros-action-controls" data-lc-actions></div>
+          <div class="sas-flags" data-lc-states></div>
+          <p data-lc-status role="status"></p>
+          <div class="ros-action-controls"><label>回调结果 <select data-lc-result><option>SUCCESS</option><option>FAILURE</option><option>ERROR</option></select></label><button type="button" data-lc-complete>完成回调</button></div>
+          <ol class="ros-action-log" data-lc-log aria-label="生命周期转换记录"></ol>
+          <p class="concept-example">点击管理动作进入过渡状态，再选择结果并完成回调；进入 ErrorProcessing 后再选择一次 on_error 的结果。仅为离线教学演示，不连接 ROS。</p>
+        </div></details>
+        <p class="concept-source">参考：<a href="ros2_node_lifecycle_中文说明.html#design" target="_blank" rel="noopener">ROS2 设计文档与生命周期仿真（完整说明）</a></p>`;
+      byId('ros2-action-card').after(card);
+      const el = selector => card.querySelector(selector);
+      const sim = el('.ros-action-sim');
+      const diagram = el('figure').cloneNode(true);
+      diagram.querySelectorAll('[id]').forEach(node => {
+        const old = node.id; node.id = old + '-sim';
+        diagram.querySelectorAll('[marker-end]').forEach(path => { if (path.getAttribute('marker-end') === 'url(#' + old + ')') path.setAttribute('marker-end', 'url(#' + old + '-sim)'); });
+      });
+      diagram.querySelector('svg').setAttribute('aria-labelledby', 'lc-basic-title-sim lc-basic-desc-sim');
+      sim.prepend(diagram);
+      const traceLine = document.createElement('p'); traceLine.className = 'concept-example'; traceLine.setAttribute('aria-live', 'polite');
+      el('[data-lc-status]').after(traceLine);
+      const legend = document.createElement('p'); legend.className = 'concept-example';
+      legend.textContent = '亮蓝框：当前状态 · 紫色流动线：最近一步。先点击管理动作，再完成回调；ERROR 出口闪亮表示转入左侧 ErrorProcessing。';
+      diagram.after(legend);
+      const visual = document.createElement('div'); visual.className = 'lc-sim-visual';
+      const controls = document.createElement('div'); controls.className = 'lc-sim-controls'; controls.setAttribute('aria-label', '生命周期仿真控制');
+      [...sim.children].forEach(child => { if (child === diagram || child === legend) visual.append(child); else controls.append(child); });
+      sim.classList.add('lc-sim-layout'); sim.append(visual, controls);
+      const svg = diagram.querySelector('svg');
+      const edges = [...svg.querySelectorAll(':scope > path')];
+      const routes = {
+        configure:[1,2,3], cleanup:[4,5,6], activate:[7,8,9], deactivate:[10,11,12],
+        shutdown:[13,16,16], error:[17,18,18]
+      };
+      let latest = null, trace = ['Unconfigured'];
+      function trackEdge(index) { latest = edges[index]; }
+      function paintDiagram() {
+        edges.forEach(path => { const isLatest = path === latest; path.style.stroke = isLatest ? '#8b5cf6' : ''; path.style.strokeWidth = isLatest ? '3.5' : ''; path.style.strokeDasharray = isLatest ? '8 5' : ''; path.style.animation = isLatest ? 'lc-path-flow 1s linear infinite' : ''; });
+        svg.querySelectorAll('rect').forEach(rect => { const current = rect.nextElementSibling?.textContent === state; rect.style.stroke = current ? '#5fe1ff' : ''; rect.style.strokeWidth = current ? '4' : ''; rect.style.filter = current ? 'drop-shadow(0 0 5px #23a6c8)' : ''; });
+        traceLine.textContent = '执行轨迹：' + trace.join(' → ');
+      }
+      const primary = ['Unconfigured', 'Inactive', 'Active', 'Finalized'];
+      const transitions = {
+        configure: {from:['Unconfigured'], via:'Configuring', to:'Inactive'},
+        activate: {from:['Inactive'], via:'Activating', to:'Active'},
+        deactivate: {from:['Active'], via:'Deactivating', to:'Inactive'},
+        cleanup: {from:['Inactive'], via:'CleaningUp', to:'Unconfigured'},
+        shutdown: {from:primary.slice(0,3), via:'ShuttingDown', to:'Finalized'}
+      };
+      let state = 'Unconfigured', pending = null;
+      const log = message => { const item = document.createElement('li'); item.textContent = message; el('[data-lc-log]').append(item); };
+      function renderLifecycle() {
+        paintDiagram();
+        el('[data-lc-states]').replaceChildren(...primary.map(name => {
+          const badge = document.createElement('span'); badge.textContent = name;
+          badge.style.cssText = name === state ? 'background:#1769aa;color:white;border-color:#1769aa' : 'color:#425c72;border-color:#b8ccdb'; return badge;
+        }));
+        el('[data-lc-status]').textContent = '当前状态：' + state + (pending ? ' · 正在等待 on_' + pending.action + ' 回调结果' : state === 'Finalized' ? ' · 已终结；重置模拟重新创建节点' : ' · 等待管理器请求');
+        card.querySelectorAll('[data-lc-action]').forEach(button => button.disabled = !!pending || !transitions[button.dataset.lcAction].from.includes(state));
+        el('[data-lc-complete]').disabled = !pending;
+        el('[data-lc-result]').disabled = !pending;
+      }
+      Object.entries(transitions).forEach(([action, spec]) => {
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = action; button.dataset.lcAction = action;
+        button.addEventListener('click', () => {
+          if (pending || !spec.from.includes(state)) return;
+          trackEdge(action === 'shutdown' ? {Unconfigured:13,Inactive:14,Active:15}[state] : routes[action][0]);
+          pending = {action, from:state, to:spec.to}; state = spec.via; trace.push(action + ' → ' + state);
+          log('change_state(' + action + ') → ' + state + ' → on_' + action + '()'); renderLifecycle();
+        }); el('[data-lc-actions]').append(button);
+      });
+      const resetButton = document.createElement('button'); resetButton.type = 'button'; resetButton.textContent = '重置'; resetButton.setAttribute('data-lc-reset', '');
+      el('[data-lc-actions]').append(resetButton);
+      el('[data-lc-complete]').addEventListener('click', () => {
+        if (!pending) return;
+        const result = el('[data-lc-result]').value, action = pending.action;
+        if (action === 'error') {
+          trackEdge(result === 'SUCCESS' ? 17 : 18);
+          state = result === 'SUCCESS' ? 'Unconfigured' : 'Finalized'; pending = null;
+          log('on_error → ' + result + ' → ' + state + '；原 change_state.success=false');
+        } else if (result === 'ERROR') {
+          latest = null;
+          const portIndex = {cleanup:0,configure:1,deactivate:2,activate:3,shutdown:4}[action];
+          const port = svg.querySelectorAll('circle[fill="#fee2e2"]')[portIndex];
+          if (port) { port.animate([{strokeWidth:2,fill:'#fee2e2'},{strokeWidth:6,fill:'#8b5cf6'},{strokeWidth:2,fill:'#fee2e2'}],{duration:1600,iterations:2}); }
+          state = 'ErrorProcessing'; pending = {action:'error'};
+          log('on_' + action + ' → ERROR → ErrorProcessing，等待 on_error()');
+        } else {
+          trackEdge(routes[action][result === 'SUCCESS' ? 1 : 2]);
+          state = result === 'SUCCESS' || action === 'shutdown' ? pending.to : pending.from; pending = null;
+          log('on_' + action + ' → ' + result + ' → ' + state + '；change_state.success=' + (result === 'SUCCESS'));
+        }
+        trace.push('on_' + action + ': ' + result + ' → ' + state);
+        renderLifecycle();
+      });
+      el('[data-lc-reset]').addEventListener('click', () => { state = 'Unconfigured'; pending = null; latest = null; trace = ['Unconfigured']; svg.getAnimations({subtree:true}).forEach(animation => animation.cancel()); el('[data-lc-result]').value = 'SUCCESS'; el('[data-lc-log]').replaceChildren(); renderLifecycle(); });
+      renderLifecycle();
+    }
+    createLifecycleBasics();
+
+    function expandNav2LifecycleNodeIntroduction() {
+      const card = byId('ros-common-node').querySelector('[data-interface="include/lifecycle_node.hpp"]');
+      const content = document.createElement('div');
+      content.innerHTML = `<h4>在 ROS 2 LifecycleNode 上补了什么？</h4>
+        <p><code>nav2::LifecycleNode</code> 仍是 <code>rclcpp_lifecycle::LifecycleNode</code>，状态机、<code>configure()</code> / <code>activate()</code> 等接口仍来自 ROS 2。Nav2 在其上统一了接口创建、参数、管理器心跳和进程关闭时的收尾。</p>
+        <div class="concept-grid"><section><h4>节点进入 Active 后</h4><p><code>create_publisher()</code> 创建的是 LifecyclePublisher，自动登记为 managed entity；若节点已是 Active，新建发布器会立即 <code>on_activate()</code>。</p><p>订阅、Service、Action、Timer 也通过同一节点成员工厂创建，复用 Nav2 的 QoS、回调组、introspection 与时钟选择。</p></section><section><h4>节点由管理器监管</h4><p><code>createBond()</code> 在 <code>bond</code> Topic 上建立与 lifecycle manager 的心跳连接；<code>bond_heartbeat_period</code> 默认 <code>0.25 s</code>，设为不大于 0 时不创建 Bond。</p><p><code>autostart_node=true</code> 时，零时长 Timer 异步依次调用 configure、activate；默认关闭。</p></section></div>
+        <h5>继承关系</h5>
+        <figure class="nw-figure nw-figure-compact">
+          <div class="nw-diagram-scroll"><svg viewBox="0 0 660 88" role="img" aria-labelledby="nw-ln-inh-title">
+            <title id="nw-ln-inh-title">nav2::LifecycleNode 继承自 rclcpp_lifecycle::LifecycleNode，状态机与接口来自 ROS 2</title>
+            <defs><marker id="nw-ln-inh-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker></defs>
+            <rect class="nw-box" x="20" y="18" width="280" height="48" rx="8"/>
+            <text x="160" y="40" text-anchor="middle" class="nw-title">rclcpp_lifecycle::LifecycleNode</text>
+            <text x="160" y="57" text-anchor="middle" class="nw-small">状态机 + configure/activate 等接口</text>
+            <path class="nw-arrow" marker-end="url(#nw-ln-inh-tip)" d="M308 42H360"/>
+            <text x="334" y="32" text-anchor="middle" class="nw-small">继承</text>
+            <rect class="nw-box" x="380" y="18" width="260" height="48" rx="8"/>
+            <text x="510" y="40" text-anchor="middle" class="nw-title">nav2::LifecycleNode</text>
+            <text x="510" y="57" text-anchor="middle" class="nw-small">补齐：接口工厂 / 参数 / Bond / 收尾</text>
+          </svg></div>
+          <p>仍是同一个 LifecycleNode，只补公共能力，不改状态机与生命周期语义。</p>
+        </figure>
+        <h5>管理器心跳</h5>
+        <figure class="nw-figure nw-figure-compact">
+          <div class="nw-diagram-scroll"><svg viewBox="0 0 660 88" role="img" aria-labelledby="nw-ln-bond-title">
+            <title id="nw-ln-bond-title">nav2::LifecycleNode 通过 createBond 在 bond Topic 上与 lifecycle manager 建立心跳</title>
+            <defs><marker id="nw-ln-bond-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker></defs>
+            <rect class="nw-box" x="20" y="18" width="260" height="48" rx="8"/>
+            <text x="150" y="40" text-anchor="middle" class="nw-title">nav2::LifecycleNode</text>
+            <text x="150" y="57" text-anchor="middle" class="nw-small">createBond()</text>
+            <path class="nw-arrow" marker-start="url(#nw-ln-bond-tip)" marker-end="url(#nw-ln-bond-tip)" d="M288 42H340"/>
+            <text x="314" y="32" text-anchor="middle" class="nw-green">bond 心跳</text>
+            <rect class="nw-box" x="360" y="18" width="280" height="48" rx="8"/>
+            <text x="500" y="40" text-anchor="middle" class="nw-title">nav2_lifecycle_manager</text>
+            <text x="500" y="57" text-anchor="middle" class="nw-small">监测存活 · 失联上报</text>
+          </svg></div>
+          <p>周期默认 0.25 s；bond_heartbeat_period 设为不大于 0 时不创建 Bond。</p>
+        </figure>
+        <h5>nav2_lifecycle_manager 如何管理生命周期</h5>
+        <p><code>nav2_lifecycle_manager</code> 本身也是节点，持有 <code>node_names</code> 列表，通过 <code>ManageLifecycleNodes</code> 服务接收控制命令，再对每个被管理节点建立 Bond、调用 <code>change_state</code> 请求转换，并用 <code>get_state</code> 与 <code>transition_event</code> 确认结果。</p>
+        <figure class="nw-figure nw-figure-compact">
+          <div class="nw-diagram-scroll"><svg viewBox="0 0 760 380" role="img" aria-labelledby="nw-lm-title">
+            <title id="nw-lm-title">nav2_lifecycle_manager 通过 ManageLifecycleNodes 服务接收命令，用 change_state 请求节点转换，用 get_state 与 transition_event 确认，并以 Bond 心跳监测存活</title>
+            <defs><marker id="nw-lm-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker><marker id="nw-lm-reply-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#c4b5fd"/></marker></defs>
+            <rect class="nw-box" x="250" y="16" width="240" height="60" rx="8"/>
+            <text x="370" y="40" text-anchor="middle" class="nw-title">控制方</text>
+            <text x="370" y="58" text-anchor="middle" class="nw-small">RViz Panel · Simple Commander · 系统测试</text>
+            <path class="nw-arrow" marker-start="url(#nw-lm-tip)" marker-end="url(#nw-lm-tip)" d="M370 76V112"/>
+            <text x="386" y="95" text-anchor="start" class="nw-small">ManageLifecycleNodes 服务</text>
+            <text x="386" y="111" text-anchor="start" class="nw-small">STARTUP · PAUSE · RESUME · RESET · SHUTDOWN</text>
+            <rect class="nw-box" x="130" y="128" width="480" height="104" rx="8"/>
+            <text x="370" y="152" text-anchor="middle" class="nw-title">nav2_lifecycle_manager</text>
+            <text x="370" y="172" text-anchor="middle" class="nw-small">持 node_names 列表 · 逐节点建立 Bond 心跳</text>
+            <text x="370" y="190" text-anchor="middle" class="nw-small">change_state / get_state 服务客户端</text>
+            <text x="370" y="208" text-anchor="middle" class="nw-small">订阅 transition_event 观察转换</text>
+            <path class="nw-arrow" marker-start="url(#nw-lm-tip)" marker-end="url(#nw-lm-tip)" d="M370 232V264"/>
+            <text x="386" y="252" text-anchor="start" class="nw-green">change_state/get_state</text>
+            <rect class="nw-box" x="130" y="272" width="480" height="76" rx="8"/>
+            <text x="370" y="298" text-anchor="middle" class="nw-title">被管理导航节点</text>
+            <text x="370" y="316" text-anchor="middle" class="nw-small">planner · controller · bt_navigator · 各类 server</text>
+            <text x="370" y="334" text-anchor="middle" class="nw-small">回调执行 → 返回 success</text>
+            <path class="nw-arrow" marker-start="url(#nw-lm-tip)" marker-end="url(#nw-lm-tip)" d="M165 232V272"/>
+            <text x="158" y="256" text-anchor="end" class="nw-green">Bond 心跳</text>
+            <path class="nw-reply" marker-end="url(#nw-lm-reply-tip)" d="M575 272V240"/>
+            <text x="589" y="254" text-anchor="start" class="nw-small">success</text>
+            <text x="589" y="270" text-anchor="start" class="nw-small">transition_event</text>
+          </svg></div>
+          <p>STARTUP 按依赖顺序 configure → activate；SHUTDOWN 时 deactivate → cleanup。Bond 失联表示节点异常，管理器据此上报或回收。</p>
+        </figure>
+        <h5>进程关闭时的收尾</h5>
+        <figure class="nw-figure nw-figure-compact">
+          <div class="nw-diagram-scroll"><svg viewBox="0 0 640 150" role="img" aria-labelledby="nw-ln-shut-title">
+            <title id="nw-ln-shut-title">进程关闭前 on_rcl_preshutdown 依次 deactivate、cleanup 并销毁 Bond</title>
+            <defs><marker id="nw-ln-shut-tip" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7dd3fc"/></marker></defs>
+            <rect class="nw-box" x="20" y="16" width="180" height="44" rx="8"/>
+            <text x="110" y="35" text-anchor="middle" class="nw-title">Context 关闭</text>
+            <text x="110" y="51" text-anchor="middle" class="nw-small">SIGINT / 退出前</text>
+            <path class="nw-arrow" marker-end="url(#nw-ln-shut-tip)" d="M208 38H250"/>
+            <text x="229" y="29" text-anchor="middle" class="nw-small">①</text>
+            <rect class="nw-box" x="270" y="12" width="300" height="52" rx="8"/>
+            <text x="420" y="33" text-anchor="middle" class="nw-title">on_rcl_preshutdown()</text>
+            <text x="420" y="50" text-anchor="middle" class="nw-small">best-effort 收尾（非状态转换）</text>
+            <text x="286" y="86" class="nw-green">② Active → deactivate()</text>
+            <text x="286" y="104" class="nw-green">③ Inactive → cleanup()</text>
+            <text x="286" y="122" class="nw-green">④ destroyBond()</text>
+            <text x="286" y="142" class="nw-small">收尾完成 → 进程继续关闭</text>
+          </svg></div>
+          <p>只做常规收尾，不覆盖节点自身完整的 shutdown 策略。</p>
+        </figure>
+        <div class="nw-table"><table class="concept-table"><thead><tr><th>Nav2 增加的成员</th><th>作用与边界</th></tr></thead><tbody>
+          <tr><td><code>declare_or_get_parameter()</code></td><td>有覆盖值时读取；未声明时按给定类型或默认值声明。参数描述符可随调用传入。</td></tr>
+          <tr><td><code>create_subscription / publisher</code></td><td>统一创建 Topic 接口；默认使用 <code>StandardTopicQoS</code>。只有 Publisher 被生命周期托管，订阅回调是否执行仍由应用设计。</td></tr>
+          <tr><td><code>create_client / service</code><br><code>create_action_server / client</code></td><td>转发到 <code>interface_factories.hpp</code>，把本节点、QoS、回调组和 Nav2 封装集中在一处。</td></tr>
+          <tr><td><code>create_timer()</code></td><td>用 <code>selectSteadyOrSimClock()</code> 创建定时器，随 <code>use_sim_time</code> 选择 ROS 时钟或 steady 时钟。</td></tr>
+          <tr><td><code>on_rcl_preshutdown()</code></td><td>Context 关闭前执行 best-effort 收尾：Active 时 deactivate，Inactive 时 cleanup，再销毁 Bond；这不是一次生命周期状态转换。</td></tr>
+        </tbody></table></div>
+        <details><summary>典型派生节点骨架</summary><pre class="language-cpp">class PlannerNode : public nav2::LifecycleNode {
+public:
+  PlannerNode() : LifecycleNode("planner") {}
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State &) override {
+    frame_id_ = declare_or_get_parameter("global_frame", std::string("map"));
+    plan_pub_ = create_publisher<nav_msgs::msg::Path>("plan");
+    createBond();
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State &) override {
+    // plan_pub_ 由生命周期框架 activate；此处准备算法业务资源
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State &) override {
+    destroyBond();
+    plan_pub_.reset();
+    return CallbackReturn::SUCCESS;
+  }
+private:
+  std::string frame_id_;
+  nav2::Publisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;
+};</pre><p class="concept-example">示例只展示职责边界：配置阶段创建长期接口和 Bond，激活阶段启动业务，清理阶段释放资源。派生类仍需实现自身的错误恢复策略。</p></details>
+        <p class="concept-example"><strong>与上方生命周期仿真的关系：</strong>仿真解释 ROS 2 状态机；本类负责让 Nav2 节点在这些转换点创建或释放公共资源。<code>runCleanups()</code> 只覆盖 Active → Inactive → Unconfigured 的常见收尾，不替代节点自身完整的 shutdown 策略。</p>`;
+      card.querySelector('.concept-source').before(content);
+      content.querySelectorAll('pre.language-cpp').forEach(pre => {
+        pre.innerHTML = pre.textContent.replaceAll('\r\n', '\n').split('\n').map(line => highlightSourceLine(line, 'cpp')).join('\n');
+      });
+    }
+    expandNav2LifecycleNodeIntroduction();
+
+    function expandInterfaceFactoriesIntroduction() {
+      const card = byId('ros-common-node').querySelector('[data-interface="include/interface_factories.hpp"]');
+      const content = document.createElement('div');
+      content.innerHTML = `<h4>把重复的创建配置放到同一个入口</h4>
+        <p><code>nav2::interfaces</code> 提供一组模板自由函数：传入节点、接口名与回调，返回对应的 ROS / Nav2 接口对象。普通 Node、LifecycleNode 或插件持有的节点指针，可在满足相应节点接口要求时复用这些工厂。</p>
+        <div class="concept-grid"><section><h4>调用链</h4><p>业务 / 插件 → <code>nav2::interfaces::create_*</code> → ROS 2 接口或 Nav2 封装。</p><p><code>nav2::LifecycleNode::create_*</code> 多数成员方法也转发到这里，省去手动传入节点。使用这些成员工厂应在节点已由 shared_ptr 管理之后，例如 <code>on_configure()</code> 中。</p></section><section><h4>统一的配置</h4><p>Topic：默认 QoS、参数覆盖、回调组及连接事件。Service / Action：复用前面介绍的封装；Action Client 创建后设置 introspection。</p><p>工厂负责创建对象；Executor 的运行、接口对象的持有和业务启停仍由应用安排。</p></section></div>
+        <h4>选哪种工厂？</h4>
+        <div class="nw-table"><table class="concept-table"><thead><tr><th>函数 / 主要参数</th><th>返回对象与使用要点</th></tr></thead><tbody>
+          <tr><td><code>create_subscription&lt;Msg&gt;(node, name, callback, qos, group)</code></td><td>返回 <code>nav2::Subscription</code>（普通 rclcpp 订阅器）；注意 callback 在 qos 前面。默认 QoS 为 StandardTopicQoS。</td></tr>
+          <tr><td><code>create_publisher&lt;Msg&gt;(node, name, qos, group, matched_cb)</code></td><td>返回 <code>nav2::Publisher</code>（LifecyclePublisher）；可指定订阅者匹配事件回调。</td></tr>
+          <tr><td><code>create_client&lt;Srv&gt;(node, name, internal_executor)</code></td><td>返回 ServiceClient，内部 Executor 默认关闭；请求调用及等待方式见 Service 客户端封装。</td></tr>
+          <tr><td><code>create_service&lt;Srv&gt;(node, name, callback, group)</code></td><td>返回 ServiceServer；回调接收请求头、Request、Response 三个共享指针。</td></tr>
+          <tr><td><code>create_action_server&lt;Action&gt;(node, name, execute, …)</code></td><td>返回 SimpleActionServer；后续参数依次为 Goal 校验、收尾回调、超时（默认 500ms）、spin_thread、realtime（均默认 false）。创建后需安排 activate / deactivate。</td></tr>
+          <tr><td><code>create_action_client&lt;Action&gt;(node, name, group)</code></td><td>创建 rclcpp_action Client，并通过 <code>setIntrospectionMode()</code> 配置服务事件观测。</td></tr>
+          <tr><td><code>nav2::create_timer(node, period, callback, group)</code></td><td>此函数位于 <strong>nav2</strong> 命名空间。use_sim_time=true 时使用节点 ROS 时钟，否则使用 steady 时钟；不会自动跟随生命周期暂停。</td></tr>
+        </tbody></table></div>
+        <details open><summary>Topic Options：QoS 覆盖与事件回调</summary>
+          <p><code>createSubscriptionOptions()</code> / <code>createPublisherOptions()</code> 只生成 Options，不创建接口。两者可设置回调组，以及类型不兼容、QoS 不兼容、deadline、liveliness 等事件回调。</p>
+          <ul><li><code>allow_parameter_qos_overrides</code> 默认 true：允许通过参数覆盖 Depth、Durability、Reliability、History。这是创建接口时使用的配置，不等于任意运行期动态修改 QoS。</li>
+          <li>未提供 matched 回调时，默认以 DEBUG 记录连接 / 断开；订阅器未提供 message_lost 回调时，以 WARN 记录底层报告的丢消息事件。</li>
+          <li>便捷 create_* 函数只暴露常用参数。需要自定义更多事件时，可单独生成 Options，再交给 rclcpp 创建函数。</li></ul>
+        </details>
+        <p class="concept-example"><strong>发布器的生命周期区别：</strong>自由函数仅创建 LifecyclePublisher，不调用 add_managed_entity，也不自动激活。<code>LifecycleNode::create_publisher()</code> 则额外登记托管，并在节点已 Active 时立即激活新发布器。直接使用自由函数时，应自行安排托管或显式启停。</p>
+        <section class="sas-example-intro" aria-labelledby="factory-example-title">
+          <h4 id="factory-example-title">简化 C++ 示例：普通节点使用自由函数</h4>
+          <p>独立程序示例，依赖 rclcpp、nav2_ros_common、std_msgs。节点、发布器和定时器均由局部共享指针保持存活。</p>
+          <button class="learning-button" id="factory-code-open" type="button" aria-haspopup="dialog">查看完整 C++ 代码</button>
+        </section>
+        <dialog class="source-dialog" id="factory-code-dialog" aria-labelledby="factory-code-title">
+          <div class="source-dialog-shell">
+            <header class="source-dialog-head"><div class="source-dialog-title"><strong id="factory-code-title">Nav2 Interface Factories · C++ 示例</strong><div class="source-dialog-meta">interface_factories_demo.cpp · 普通节点使用自由函数</div></div><div class="source-dialog-actions"><button class="source-dialog-close" id="factory-code-close" type="button" aria-label="关闭 C++ 代码窗口">×</button></div></header>
+            <div class="source-code-frame"><pre><code data-factory-example></code></pre></div>
+          </div>
+        </dialog>`;
+      const code = content.querySelector('[data-factory-example]');
+      code.textContent = `#include <chrono>
+#include <memory>
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "nav2_ros_common/interface_factories.hpp"
+
+int main(int argc, char ** argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("factory_demo");
+  auto pub = nav2::interfaces::create_publisher<std_msgs::msg::String>(
+    node, "status", nav2::qos::StandardTopicQoS());
+  pub->on_activate();  // 普通节点：显式启用 LifecyclePublisher
+
+  auto timer = nav2::create_timer(node, std::chrono::seconds(1), [pub]() {
+    std_msgs::msg::String msg;
+    msg.data = "ready";
+    pub->publish(msg);
+  });
+  rclcpp::spin(node);
+  timer->cancel();
+  pub->on_deactivate();
+  rclcpp::shutdown();
+  return 0;
+}`;
+      code.innerHTML = renderSource(code.textContent, 'interface_factories_demo.cpp');
+      const dialog = content.querySelector('#factory-code-dialog');
+      content.querySelector('#factory-code-open').addEventListener('click', () => dialog.showModal());
+      content.querySelector('#factory-code-close').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+      card.querySelector('.concept-source').before(content);
+    }
+    expandInterfaceFactoriesIntroduction();
 
     function createServiceBasics() {
       const card = document.createElement('details');
